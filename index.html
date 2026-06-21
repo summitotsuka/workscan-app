@@ -492,7 +492,8 @@ const S = {
   forgotStep: 1,
   checkedIn: false, inTime: null, inDate: null,
   wInt: null,
-  histMonths: 1
+  histMonths: 1,
+  role: 'EMPLOYEE', hrToken: null
 };
 
 // CONSTANTS
@@ -730,11 +731,13 @@ function doLogin() {
   const btn = document.getElementById('btn-login');
   if (!id || !pw) { showToast('กรุณากรอกรหัสพนักงานและรหัสผ่าน'); return; }
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
-  gasRun('login', { employeeId: id, password: pw })
+  gasRun('login', { employeeId: id, password: pw, deviceFingerprint: S.fp })
     .withSuccessHandler(r => {
       btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
       if (!r || !r.success) { showToast((r && r.message) || 'เข้าสู่ระบบไม่สำเร็จ'); return; }
       S.empId = r.employeeId; S.name = r.name;
+      S.role = r.role || 'EMPLOYEE';
+      S.hrToken = r.hrToken || null;
       S.checkedIn = r.checkedIn || false;
       S.inTime = r.inTime || null; S.inDate = r.inDate || null;
 
@@ -745,9 +748,14 @@ function doLogin() {
       const lbl = document.getElementById('ci-lbl');
       if (lbl) lbl.textContent = r.name + ' · ' + r.employeeId;
 
+      // จัดเมนูตาม role (ขั้นที่ 2 จะ implement applyRoleMenus เต็มรูปแบบ)
+      if (typeof applyRoleMenus === 'function') applyRoleMenus(S.role);
+
       // navigate — ใช้ setTimeout เพื่อให้ browser mobile render ทัน
       setTimeout(() => {
-        if (r.checkedIn && !r.checkedOut) {
+        if (S.role === 'HR') {
+          go('checkin');  // ขั้นที่ 2 จะเปลี่ยนเป็นหน้า HR
+        } else if (r.checkedIn && !r.checkedOut) {
           if (r.inTime) startWT(r.inTime, r.inDate);
           go('checkout');
         } else {
