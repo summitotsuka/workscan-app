@@ -94,6 +94,8 @@ select.inp option{background:var(--sf2)}
 .status-late{color:var(--wn);font-size:10px}
 .status-err{color:var(--er);font-size:10px}
 .hist-empty{text-align:center;padding:32px 0;color:var(--tx3);font-size:13px}
+.range-btn{flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--bd2);background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:500;font-family:var(--fn);cursor:pointer;transition:all .15s}
+.range-btn.active{background:var(--ac);border-color:var(--ac);color:#fff}
 
 .selfie-row{display:flex;align-items:center;gap:12px;margin-top:10px}
 .selfie-thumb{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--ok);display:none}
@@ -384,17 +386,24 @@ select.inp option{background:var(--sf2)}
 </div>
 
 <div class="page" id="page-history">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div>
       <div style="font-size:16px;font-weight:600" id="hist-title">ประวัติการลงเวลา</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px">ย้อนหลัง 31 วัน</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px" id="hist-range-label">ย้อนหลัง 1 เดือน</div>
     </div>
     <button class="btn o sm" id="btn-hist-reload">รีเฟรช</button>
   </div>
 
+  <!-- ปุ่มเลือกช่วงเวลา 1/2/3 เดือน -->
+  <div style="display:flex;gap:6px;margin-bottom:14px" id="hist-range-tabs">
+    <button class="range-btn active" data-months="1">1 เดือน</button>
+    <button class="range-btn" data-months="2">2 เดือน</button>
+    <button class="range-btn" data-months="3">3 เดือน</button>
+  </div>
+
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px" id="hist-summary">
     <div class="card" style="padding:12px;text-align:center;margin-bottom:0">
-      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">วันที่มา</div>
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">มาทำงาน</div>
       <div style="font-size:22px;font-weight:600;color:var(--ok)" id="h-days">—</div>
     </div>
     <div class="card" style="padding:12px;text-align:center;margin-bottom:0">
@@ -402,7 +411,7 @@ select.inp option{background:var(--sf2)}
       <div style="font-size:22px;font-weight:600;color:var(--wn)" id="h-late">—</div>
     </div>
     <div class="card" style="padding:12px;text-align:center;margin-bottom:0">
-      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">ขาด OUT</div>
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">ไม่เช็คเอาต์</div>
       <div style="font-size:22px;font-weight:600;color:var(--er)" id="h-noout">—</div>
     </div>
   </div>
@@ -482,7 +491,8 @@ const S = {
   verifiedEmpId: '',
   forgotStep: 1,
   checkedIn: false, inTime: null, inDate: null,
-  wInt: null
+  wInt: null,
+  histMonths: 1
 };
 
 // CONSTANTS
@@ -785,18 +795,28 @@ function doForgot() {
 }
 
 // ========== HISTORY ==========
-function loadHistory() {
+function loadHistory(months) {
   if (!S.empId) return;
+  // ถ้าไม่ส่ง months มา ใช้ค่าที่เลือกล่าสุด (default 1)
+  if (months) S.histMonths = months;
+  if (!S.histMonths) S.histMonths = 1;
+
+  // update label + ปุ่ม active
+  const lbl = document.getElementById('hist-range-label');
+  if (lbl) lbl.textContent = 'ย้อนหลัง ' + S.histMonths + ' เดือน';
+  document.querySelectorAll('.range-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.months, 10) === S.histMonths);
+  });
+
   document.getElementById('hist-loading').style.display = 'block';
   document.getElementById('hist-card').style.display = 'none';
-  gasRun('getMyAttendance', { employeeId: S.empId })
+  gasRun('getMyAttendance', { employeeId: S.empId, months: S.histMonths })
     .withSuccessHandler(renderHistory)
     .withFailureHandler(e => { document.getElementById('hist-loading').style.display = 'none'; showToast(e.message); });
 }
 
 function renderHistory(r) {
   document.getElementById('hist-loading').style.display = 'none';
-  // ── ข้อ 2: ป้องกัน null / missing fields ─────────────────
   if (!r) { showToast('ไม่ได้รับข้อมูลจาก server'); return; }
   if (!r.success) { showToast(r.message || 'โหลดข้อมูลไม่สำเร็จ'); return; }
 
@@ -804,29 +824,19 @@ function renderHistory(r) {
   if (titleEl) titleEl.textContent = 'ประวัติ — ' + (r.name || S.name || '');
 
   const rows = Array.isArray(r.rows) ? r.rows : [];
-  const days = new Set(), late = [], noOut = [];
-  const dateMap = {};
-  rows.forEach(row => {
-    if (!row || !row.type) return;
-    if (row.type === 'IN') {
-      days.add(row.date);
-      if (row.status && row.status.startsWith('LATE')) late.push(row.date);
-      dateMap[row.date] = { hasIn: true, hasOut: false };
-    }
-    if (row.type === 'OUT' && dateMap[row.date]) dateMap[row.date].hasOut = true;
-  });
-  Object.entries(dateMap).forEach(([d, v]) => { if (v.hasIn && !v.hasOut) noOut.push(d); });
 
-  const hd = document.getElementById('h-days');   if(hd) hd.textContent = days.size;
-  const hl = document.getElementById('h-late');   if(hl) hl.textContent = late.length;
-  const hn = document.getElementById('h-noout');  if(hn) hn.textContent = noOut.length;
+  // ── สรุปจาก server (นับเฉพาะ record สมบูรณ์แล้ว) ──
+  const sum = r.summary || { worked: 0, late: 0, noCheckout: 0 };
+  const hd = document.getElementById('h-days');   if (hd) hd.textContent = sum.worked;
+  const hl = document.getElementById('h-late');   if (hl) hl.textContent = sum.late;
+  const hn = document.getElementById('h-noout');  if (hn) hn.textContent = sum.noCheckout;
 
   const card = document.getElementById('hist-card');
   const body = document.getElementById('hist-body');
   if (!card || !body) return;
 
   if (rows.length === 0) {
-    body.innerHTML = '<div class="hist-empty">ไม่มีข้อมูลการลงเวลาใน 31 วันที่ผ่านมา</div>';
+    body.innerHTML = '<div class="hist-empty">ไม่มีข้อมูลการลงเวลาในช่วงนี้</div>';
     card.style.display = 'block';
     return;
   }
@@ -846,7 +856,9 @@ function renderHistory(r) {
     else statusHtml = `<span class="status-err">✗ ${st}</span>`;
     const typeHtml = row.type === 'IN' ? '<span class="type-in">เข้า</span>' : '<span class="type-out">ออก</span>';
     const durHtml = row.duration ? `<span style="font-size:11px;color:var(--ok)">${row.duration}</span>` : '—';
-    html += `<tr style="${isNewDay?'border-top:2px solid var(--bd2)':''}"><td><div class="hist-date">${thDate}</div><div style="font-family:var(--mo);font-size:13px;color:var(--tx)">${timeShort}</div></td><td>${typeHtml}</td><td>${statusHtml}</td><td>${durHtml}</td></tr>`;
+    // record ไม่สมบูรณ์ (anomaly) → จางลงให้รู้ว่าไม่นับ
+    const dim = row.complete === false ? 'opacity:.5' : '';
+    html += `<tr style="${isNewDay?'border-top:2px solid var(--bd2);':''}${dim}"><td><div class="hist-date">${thDate}</div><div style="font-family:var(--mo);font-size:13px;color:var(--tx)">${timeShort}</div></td><td>${typeHtml}</td><td>${statusHtml}</td><td>${durHtml}</td></tr>`;
   });
   html += '</tbody></table>';
   body.innerHTML = html;
@@ -991,7 +1003,14 @@ setEB(1);
   on('btn-co', 'click', doCheckout);
 
   // HISTORY
-  on('btn-hist-reload', 'click', loadHistory);
+  on('btn-hist-reload', 'click', function() { loadHistory(); });
+
+  // ปุ่มเลือกช่วงเวลา 1/2/3 เดือน
+  document.querySelectorAll('.range-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      loadHistory(parseInt(b.dataset.months, 10));
+    });
+  });
 
   // OVERLAY close
   var ocl = document.querySelector('.res-card .btn.o');
