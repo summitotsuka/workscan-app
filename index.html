@@ -411,7 +411,7 @@ select.inp option{background:var(--sf2)}
       <div style="font-size:22px;font-weight:600;color:var(--wn)" id="h-late">—</div>
     </div>
     <div class="card" style="padding:12px;text-align:center;margin-bottom:0">
-      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">ไม่เช็คเอาต์</div>
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">รอแก้ไข</div>
       <div style="font-size:22px;font-weight:600;color:var(--er)" id="h-noout">—</div>
     </div>
   </div>
@@ -837,7 +837,7 @@ function renderHistory(r) {
   const sum = r.summary || { worked: 0, late: 0, noCheckout: 0 };
   const hd = document.getElementById('h-days');   if (hd) hd.textContent = sum.worked;
   const hl = document.getElementById('h-late');   if (hl) hl.textContent = sum.late;
-  const hn = document.getElementById('h-noout');  if (hn) hn.textContent = sum.noCheckout;
+  const hn = document.getElementById('h-noout');  if (hn) hn.textContent = sum.needFix != null ? sum.needFix : (sum.noCheckout || 0);
 
   const card = document.getElementById('hist-card');
   const body = document.getElementById('hist-body');
@@ -861,6 +861,7 @@ function renderHistory(r) {
     const st = row.status || 'OK';
     if (st === 'OK') statusHtml = '<span class="status-ok">✓ ปกติ</span>';
     else if (st.startsWith('LATE')) statusHtml = `<span class="status-late">⏰ ${st.replace('LATE ','สาย ')}</span>`;
+    else if (st === 'OUT_NO_IN') statusHtml = '<span class="status-err">⚠ รอเช็คอิน (แจ้ง HR)</span>';
     else statusHtml = `<span class="status-err">✗ ${st}</span>`;
     const typeHtml = row.type === 'IN' ? '<span class="type-in">เข้า</span>' : '<span class="type-out">ออก</span>';
     const durHtml = row.duration ? `<span style="font-size:11px;color:var(--ok)">${row.duration}</span>` : '—';
@@ -916,7 +917,18 @@ function doCheckout() {
       btn.disabled = false; btn.textContent = 'เช็คเอาต์ออกงาน';
       if (!r.success) { showToast(r.message); return; }
       if (S.wInt) { clearInterval(S.wInt); S.wInt = null; }
-      showRes({ icon: '🏁', title: 'เช็คเอาต์สำเร็จ!', time: r.time, tc: 'var(--er)', summary: { in: S.inTime, out: r.time, dur: r.duration }, sub: r.name + '\nบันทึกเวลาออกงานเรียบร้อย' });
+      if (r.outWithoutIn) {
+        // เช็คเอาต์สำเร็จแต่ไม่มีเช็คอิน — เตือนให้แจ้ง HR
+        showRes({
+          icon: '⚠️',
+          title: 'เช็คเอาต์สำเร็จ (ไม่มีเช็คอิน)',
+          time: r.time,
+          tc: 'var(--wn)',
+          sub: r.name + '\nระบบไม่พบการเช็คอินของวันนี้\nกรุณาแจ้ง HR เพื่อคีย์เวลาเข้างานย้อนหลัง'
+        });
+      } else {
+        showRes({ icon: '🏁', title: 'เช็คเอาต์สำเร็จ!', time: r.time, tc: 'var(--er)', summary: { in: S.inTime, out: r.time, dur: r.duration }, sub: r.name + '\nบันทึกเวลาออกงานเรียบร้อย' });
+      }
     })
     .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'เช็คเอาต์ออกงาน'; showToast(e.message); });
 }
