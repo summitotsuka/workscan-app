@@ -30,6 +30,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .nav-tab.active{background:var(--ac);color:#fff}
 .nav-tab.co{background:var(--er);color:#fff}
 .nav-tab.ht{background:var(--sf2);color:var(--tx2)}
+.nav-tab.hr{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+.nav-tab.hr.active{background:linear-gradient(135deg,#6d28d9,#9333ea);color:#fff}
+.hr-menu-card{display:flex;align-items:center;gap:12px;padding:16px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;cursor:pointer;transition:all .15s}
+.hr-menu-card:active{transform:scale(.98);background:var(--sf2)}
+.hr-menu-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.hr-menu-title{font-size:15px;font-weight:600;color:var(--tx)}
+.hr-menu-desc{font-size:11px;color:var(--tx3);margin-top:2px}
+.hr-menu-arrow{font-size:22px;color:var(--tx3);flex-shrink:0}
 .nav-clock{font-family:var(--mo);font-size:11px;color:var(--tx3)}
 
 .page{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(20px + var(--sab));z-index:1}
@@ -176,9 +184,12 @@ select.inp option{background:var(--sf2)}
   <div class="logo"><div class="logo-icon">W</div>WorkScan</div>
   <div class="nav-right">
     <div class="nav-tabs" id="nav-tabs" style="display:none">
+      <!-- เมนูพนักงาน -->
       <button class="nav-tab active" id="tab-in">เช็คอิน</button>
       <button class="nav-tab"        id="tab-out">เช็คเอาต์</button>
       <button class="nav-tab ht"    id="tab-hist">เช็คเวลา</button>
+      <!-- เมนู HR (ซ่อนไว้ก่อน แสดงเมื่อ role=HR) -->
+      <button class="nav-tab hr" id="tab-hr-dash" style="display:none">HR</button>
     </div>
     <div class="nav-clock" id="clock">--:--:--</div>
   </div>
@@ -426,6 +437,60 @@ select.inp option{background:var(--sf2)}
   </div>
 </div>
 
+<!-- ═══════════════ HR DASHBOARD (placeholder ขั้นที่ 2) ═══════════════ -->
+<div class="page" id="page-hr-dash">
+  <div style="margin-bottom:16px">
+    <div style="font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px">
+      <span style="display:inline-flex;width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#7c3aed,#a855f7);align-items:center;justify-content:center;font-size:13px">★</span>
+      ระบบฝ่ายบุคคล
+    </div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:3px" id="hr-welcome">—</div>
+  </div>
+
+  <!-- เมนู HR แบบการ์ด -->
+  <div style="display:grid;gap:10px">
+    <div class="hr-menu-card" id="hr-menu-dashboard">
+      <div class="hr-menu-icon" style="background:rgba(59,130,246,.15);color:#60a5fa">▦</div>
+      <div style="flex:1">
+        <div class="hr-menu-title">ภาพรวมรายวัน</div>
+        <div class="hr-menu-desc">ใครมาแล้ว ใครยังไม่มา ใครมาสาย</div>
+      </div>
+      <div class="hr-menu-arrow">›</div>
+    </div>
+
+    <div class="hr-menu-card" id="hr-menu-employees">
+      <div class="hr-menu-icon" style="background:rgba(16,185,129,.15);color:#34d399">☷</div>
+      <div style="flex:1">
+        <div class="hr-menu-title">จัดการพนักงาน</div>
+        <div class="hr-menu-desc">เพิ่ม/แก้ไข/เปลี่ยนกะ/คีย์เวลาย้อนหลัง</div>
+      </div>
+      <div class="hr-menu-arrow">›</div>
+    </div>
+
+    <div class="hr-menu-card" id="hr-menu-report">
+      <div class="hr-menu-icon" style="background:rgba(245,158,11,.15);color:#fbbf24">▤</div>
+      <div style="flex:1">
+        <div class="hr-menu-title">รายงานรายบุคคล</div>
+        <div class="hr-menu-desc">ดูประวัติการลงเวลาของพนักงานแต่ละคน</div>
+      </div>
+      <div class="hr-menu-arrow">›</div>
+    </div>
+
+    <div class="hr-menu-card" id="hr-menu-export">
+      <div class="hr-menu-icon" style="background:rgba(168,85,247,.15);color:#c084fc">⤓</div>
+      <div style="flex:1">
+        <div class="hr-menu-title">Export เงินเดือน</div>
+        <div class="hr-menu-desc">ดาวน์โหลดข้อมูลชั่วโมงทำงานตามช่วงเวลา</div>
+      </div>
+      <div class="hr-menu-arrow">›</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;padding:12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:10px;font-size:12px;color:var(--tx2);line-height:1.6">
+    เนื้อหาแต่ละเมนูจะทยอยเพิ่มในขั้นถัดไป — ตอนนี้ยืนยันว่าเมนู HR แยกจากเมนูพนักงานถูกต้องแล้ว
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="res-card">
     <div class="r-icon" id="ri">✅</div>
@@ -607,15 +672,17 @@ function go(id) {
   void target.offsetHeight; // force reflow
   target.classList.add('active');
 
+  // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
+  const navPages = ['checkin','checkout','history','hr-dash'];
   const tabs = document.getElementById('nav-tabs');
-  if (tabs) tabs.style.display = ['checkin','checkout','history'].includes(id) ? 'flex' : 'none';
+  if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
   // sync tab highlight
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active','co','ht'));
-  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist' };
+  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist', 'hr-dash':'tab-hr-dash' };
   if (m[id]) {
     const t = document.getElementById(m[id]);
-    if (t) t.classList.add(id==='checkout'?'co': id==='history'?'ht':'active');
+    if (t) t.classList.add(id==='checkout'?'co': id==='history'?'ht': id==='hr-dash'?'active':'active');
   }
 
   if (id === 'checkout' && S.inTime) {
@@ -625,6 +692,32 @@ function go(id) {
 }
 
 function tab(id, el) { go(id); }
+
+/**
+ * จัดเมนูตาม role — ซ่อน/แสดงแท็บให้ตรงกับสิทธิ์
+ * HR: เห็นเฉพาะแท็บ HR (ไม่เห็น เช็คอิน/เอาต์/เวลา)
+ * EMPLOYEE: เห็นเฉพาะ เช็คอิน/เอาต์/เวลา (ไม่เห็น HR)
+ */
+function applyRoleMenus(role) {
+  const isHR = role === 'HR';
+  const empTabs = ['tab-in', 'tab-out', 'tab-hist'];
+  const hrTabs  = ['tab-hr-dash'];
+
+  empTabs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isHR ? 'none' : '';
+  });
+  hrTabs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isHR ? '' : 'none';
+  });
+
+  // ข้อความต้อนรับในหน้า HR
+  if (isHR) {
+    const w = document.getElementById('hr-welcome');
+    if (w) w.textContent = S.name + ' · ' + S.empId;
+  }
+}
 
 
 // ========== ENROLLMENT ==========
@@ -748,13 +841,13 @@ function doLogin() {
       const lbl = document.getElementById('ci-lbl');
       if (lbl) lbl.textContent = r.name + ' · ' + r.employeeId;
 
-      // จัดเมนูตาม role (ขั้นที่ 2 จะ implement applyRoleMenus เต็มรูปแบบ)
-      if (typeof applyRoleMenus === 'function') applyRoleMenus(S.role);
+      // จัดเมนูตาม role
+      applyRoleMenus(S.role);
 
       // navigate — ใช้ setTimeout เพื่อให้ browser mobile render ทัน
       setTimeout(() => {
         if (S.role === 'HR') {
-          go('checkin');  // ขั้นที่ 2 จะเปลี่ยนเป็นหน้า HR
+          go('hr-dash');
         } else if (r.checkedIn && !r.checkedOut) {
           if (r.inTime) startWT(r.inTime, r.inDate);
           go('checkout');
@@ -972,6 +1065,13 @@ setEB(1);
   on('tab-in',   'click', function() { tab('checkin',  document.getElementById('tab-in')); });
   on('tab-out',  'click', function() { tab('checkout', document.getElementById('tab-out')); });
   on('tab-hist', 'click', function() { tab('history',  document.getElementById('tab-hist')); });
+  on('tab-hr-dash', 'click', function() { go('hr-dash'); });
+
+  // HR menu cards (ขั้นถัดไปจะผูกกับหน้าจริง)
+  on('hr-menu-dashboard', 'click', function() { showToast('ภาพรวมรายวัน — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-employees', 'click', function() { showToast('จัดการพนักงาน — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-report',    'click', function() { showToast('รายงานรายบุคคล — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-export',    'click', function() { showToast('Export เงินเดือน — จะเพิ่มในขั้นถัดไป'); });
 
   // LOGIN
   on('btn-login', 'click', doLogin);
