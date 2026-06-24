@@ -203,6 +203,7 @@ select.inp option{background:var(--sf2)}
     <div id="emp-name-strip" style="font-size:12px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
     <div id="emp-meta-strip" style="font-size:10px;color:var(--tx3)">—</div>
   </div>
+  <button id="btn-logout" style="background:none;border:1px solid var(--bd2);color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:var(--fn);flex-shrink:0">ออกจากระบบ</button>
 </div>
 
 <div class="page active" id="page-welcome">
@@ -616,7 +617,70 @@ const OFFICE = { lat: 13.449238475430999, lng: 101.03901280652984 };
     return v;
   })();
   startGPS();
+  // ลองกู้ session เดิม (ถ้ายังไม่หมดอายุ) — จะ login อัตโนมัติ
+  restoreSession();
 })();
+
+// ── SESSION (จำ login ไว้ 12 ชม. ครอบ 1 กะงาน) ──────────────
+const SESSION_TTL_MS = 12 * 3600 * 1000;
+
+function saveSession(loginResult) {
+  try {
+    const sess = {
+      empId:   loginResult.employeeId,
+      name:    loginResult.name,
+      role:    loginResult.role || 'EMPLOYEE',
+      shift:   loginResult.shift || 'A',
+      shiftLabel: loginResult.shiftLabel || '',
+      hrToken: loginResult.hrToken || null,
+      expire:  Date.now() + SESSION_TTL_MS,
+    };
+    localStorage.setItem('ws6_session', JSON.stringify(sess));
+  } catch(e) {}
+}
+
+function restoreSession() {
+  let sess;
+  try {
+    sess = JSON.parse(localStorage.getItem('ws6_session') || 'null');
+  } catch(e) { sess = null; }
+  if (!sess || !sess.empId) return;
+  // หมดอายุ → ล้างทิ้ง ให้ login ใหม่
+  if (Date.now() > sess.expire) { localStorage.removeItem('ws6_session'); return; }
+
+  // กู้ state แล้วเข้าหน้าที่เหมาะสม — แต่ต้อง refresh สถานะ session เช็คอินจาก server
+  S.empId = sess.empId; S.name = sess.name; S.role = sess.role;
+  S.shift = sess.shift; S.skipGps = (sess.shift === 'DRIVER');
+  S.hrToken = sess.hrToken;
+
+  showEmpStrip(sess.name, sess.empId, sess.shiftLabel);
+  applyRoleMenus(sess.role);
+  const lbl = document.getElementById('ci-lbl');
+  if (lbl) lbl.textContent = sess.name + ' · ' + sess.empId;
+
+  if (sess.role === 'HR') {
+    go('hr-dash');
+    return;
+  }
+
+  // EMPLOYEE: เช็คสถานะเช็คอินวันนี้จาก server ก่อนตัดสินหน้า
+  gasRun('getTodayStatus', { employeeId: sess.empId })
+    .withSuccessHandler(st => {
+      if (st && st.checkedIn && !st.checkedOut) {
+        S.checkedIn = true; S.inTime = st.inTime; S.inDate = st.inDate;
+        if (st.inTime) startWT(st.inTime, st.inDate);
+        go('checkout');
+      } else {
+        go('checkin');
+      }
+    })
+    .withFailureHandler(() => { go('checkin'); });
+}
+
+function logout() {
+  localStorage.removeItem('ws6_session');
+  location.reload();
+}
 
 // ========== DATE HELPERS ==========
 function maskDate(el) {
@@ -837,12 +901,52 @@ function openCam(which) {
     });
 }
 
-function snapCam(which) {
+// ── ตรวจว่ามีใบหน้าจริงในภาพไหม ──────────────────────────────
+// ใช้ FaceDetector API (ฟรี ในเบราว์เซอร์) ถ้าไม่รองรับ → ตรวจความสว่างแทน
+async function hasFace(canvas) {
+  // วิธีที่ 1: FaceDetector API (Chrome, Android, Edge)
+  if ('FaceDetector' in window) {
+    try {
+      const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      const faces = await detector.detect(canvas);
+      return faces.length > 0;
+    } catch (e) {
+      // ถ้า detector error → ตกไปใช้วิธีที่ 2
+    }
+  }
+  // วิธีที่ 2 (fallback): ตรวจความสว่าง + ความหลากหลายของสี
+  // กันการถ่ายผนังเรียบ/มืดสนิท แต่ไม่แม่นเท่า FaceDetector
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let sum = 0, sumSq = 0, n = 0;
+  for (let i = 0; i < data.length; i += 40) { // sample ทุก 10 px
+    const lum = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+    sum += lum; sumSq += lum*lum; n++;
+  }
+  const mean = sum / n;
+  const variance = sumSq / n - mean * mean;
+  // ภาพมืดเกิน (mean<25) หรือเรียบเกิน (variance ต่ำ = ผนังสีเดียว) → ไม่ผ่าน
+  return mean > 25 && variance > 180;
+}
+
+async function snapCam(which) {
   const vidId = which === 'ci' ? 'v-in' : 'v-out';
   const v = document.getElementById(vidId);
   if (!v || !v.srcObject) { showToast('กรุณาเปิดกล้องก่อน'); return; }
   const c = document.createElement('canvas'); c.width = 480; c.height = 640;
   c.getContext('2d').drawImage(v, 0, 0, 480, 640);
+
+  // ── ตรวจใบหน้าก่อนยอมรับภาพ ──
+  const snapBtn = document.getElementById(which + '-snap');
+  const prevText = snapBtn.textContent;
+  snapBtn.disabled = true; snapBtn.textContent = 'กำลังตรวจใบหน้า...';
+  const faceOk = await hasFace(c);
+  snapBtn.disabled = false; snapBtn.textContent = prevText;
+  if (!faceOk) {
+    showToast('ไม่พบใบหน้าในภาพ — กรุณาให้เห็นหน้าชัดเจนในกรอบ');
+    return;
+  }
+
   const b64 = c.toDataURL('image/jpeg', 0.8);
   if (which === 'ci') S.ciSelfie = b64; else S.coSelfie = b64;
 
@@ -868,22 +972,30 @@ function retakeCam(which) {
   if (which === 'ci' && st) { st.className = 'stp'; st.innerHTML = '<span>⏳</span><span>Selfie</span>'; }
 }
 
-function snapEnroll() {
+async function snapEnroll() {
   const v = document.getElementById('v-enroll');
   if (v && v.srcObject) {
     const c = document.createElement('canvas'); c.width = 320; c.height = 240;
     c.getContext('2d').drawImage(v, 0, 0, 320, 240);
+
+    // ตรวจใบหน้าก่อน
+    const snapBtn = document.getElementById('btn-snap');
+    const prev = snapBtn.textContent;
+    snapBtn.disabled = true; snapBtn.textContent = 'กำลังตรวจใบหน้า...';
+    const faceOk = await hasFace(c);
+    snapBtn.disabled = false; snapBtn.textContent = prev;
+    if (!faceOk) { showToast('ไม่พบใบหน้าในภาพ — กรุณาให้เห็นหน้าชัดเจน'); return; }
+
     S.enrollB64 = c.toDataURL('image/jpeg', 0.75);
     document.getElementById('selfie-thumb').src = S.enrollB64;
     document.getElementById('selfie-thumb').style.display = 'block';
     document.getElementById('selfie-done').style.display = 'flex';
     document.getElementById('e-cam-wrap').style.display = 'none';
     document.getElementById('btn-snap').style.display = 'none';
+    document.getElementById('btn-reg').disabled = false;
   } else {
-    // ไม่มีกล้อง — ข้ามได้ในระหว่างทดสอบ
-    S.enrollB64 = null;
+    showToast('กรุณาเปิดกล้องก่อน');
   }
-  document.getElementById('btn-reg').disabled = false;
 }
 
 function retake() {
@@ -931,6 +1043,9 @@ function doLogin() {
       S.skipGps = (r.shift === 'DRIVER');  // กะคนขับ — ไม่ต้อง block GPS ฝั่ง client
       S.checkedIn = r.checkedIn || false;
       S.inTime = r.inTime || null; S.inDate = r.inDate || null;
+
+      // บันทึก session ไว้ — refresh ในช่วง TTL ไม่ต้อง login ใหม่
+      saveSession(r);
 
       // แสดงชื่อพนักงานบน strip
       showEmpStrip(r.name, r.employeeId, r.shiftLabel);
@@ -1099,6 +1214,9 @@ function doCheckin() {
       startWT(r.time, r.date);
       const sub = r.isLate ? `${r.name}\nมาสาย ${r.lateMin} นาที` : `${r.name}\nบันทึกเวลาเข้างานเรียบร้อย`;
       showRes({ icon: '✅', title: 'เช็คอินสำเร็จ!', time: r.time, tc: 'var(--ok)', sub });
+      resetSelfieUI('ci');   // เคลียร์ selfie + กล้อง พร้อมเช็คครั้งใหม่
+      // พาไปหน้าเช็คเอาต์อัตโนมัติ (พร้อมสำหรับตอนเลิกงาน)
+      setTimeout(() => { if (!document.getElementById('overlay').classList.contains('show')) go('checkout'); }, 100);
     })
     .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'เช็คอินเข้างาน'; showToast(e.message); });
 }
@@ -1125,8 +1243,27 @@ function doCheckout() {
       } else {
         showRes({ icon: '🏁', title: 'เช็คเอาต์สำเร็จ!', time: r.time, tc: 'var(--er)', summary: { in: S.inTime, out: r.time, dur: r.duration }, sub: r.name + '\nบันทึกเวลาออกงานเรียบร้อย' });
       }
+      resetSelfieUI('co');   // เคลียร์ selfie + กล้อง
     })
     .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'เช็คเอาต์ออกงาน'; showToast(e.message); });
+}
+
+// เคลียร์ selfie state + UI กล้องกลับสภาพพร้อมถ่ายใหม่
+function resetSelfieUI(which) {
+  if (which === 'ci') S.ciSelfie = null; else S.coSelfie = null;
+  // ปิดกล้องถ้ายังเปิดค้างอยู่
+  const cam = which === 'ci' ? S.ciCam : S.coCam;
+  if (cam) { cam.getTracks().forEach(t => t.stop()); if (which === 'ci') S.ciCam = null; else S.coCam = null; }
+  const done = document.getElementById(which + '-selfie-done');
+  const wrap = document.getElementById(which + '-cam-wrap');
+  const open = document.getElementById(which + '-open-cam');
+  const snap = document.getElementById(which + '-snap');
+  if (done) done.style.display = 'none';
+  if (wrap) wrap.style.display = 'none';
+  if (open) open.style.display = 'block';
+  if (snap) snap.style.display = 'none';
+  const st = document.getElementById('st-selfie');
+  if (which === 'ci' && st) { st.className = 'stp'; st.innerHTML = '<span>⏳</span><span>Selfie</span>'; }
 }
 
 // ========== UI HELPERS ==========
@@ -1178,6 +1315,9 @@ setEB(1);
 
   // LOGIN
   on('btn-login', 'click', doLogin);
+  on('btn-logout', 'click', function() {
+    if (confirm('ออกจากระบบ?')) logout();
+  });
   on('login-id',  'input',   function() { this.value = this.value.toUpperCase(); });
   on('login-id',  'keydown', function(e) { if (e.key==='Enter') { var pw=document.getElementById('login-pw'); if(pw) pw.focus(); } });
   on('login-pw',  'keydown', function(e) { if (e.key==='Enter') doLogin(); });
