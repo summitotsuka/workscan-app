@@ -69,8 +69,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 select.inp option{background:var(--sf2)}
 
-.cam-wrap{position:relative;background:#060810;border-radius:10px;overflow:hidden;border:1px solid var(--bd2);aspect-ratio:4/3;margin-bottom:10px}
-.cam-wrap video{width:100%;height:100%;object-fit:cover;display:block}
+.cam-wrap{position:relative;background:#060810;border-radius:14px;overflow:hidden;border:2px solid var(--ac);aspect-ratio:3/4;max-height:420px;margin:0 auto 10px;width:100%}
+.cam-wrap video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+.cam-wrap.er{border-color:var(--er)}
 .face-ring{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .oval{width:88px;height:108px;border:2px solid var(--ac);border-radius:50% 50% 45% 45%;position:relative;animation:ov 2s ease-in-out infinite}
 .oval.er{border-color:var(--er);animation:ov-er 2s ease-in-out infinite}
@@ -288,7 +289,8 @@ select.inp option{background:var(--sf2)}
           style="text-transform:uppercase"></div>
       <div class="field"><label>วันที่เริ่มงาน (StartDate)</label>
         <input class="inp" id="e-startdate" placeholder="วว/ดด/ปปปป" autocomplete="off"
-          inputmode="numeric" maxlength="10"></div>
+          inputmode="numeric" maxlength="10">
+        <div style="font-size:11px;color:var(--tx3);margin-top:4px">ตัวอย่าง 01/06/2567 (พ.ศ.) หรือ 01/06/2024 (ค.ศ.) ระบบแปลงให้อัตโนมัติ</div></div>
       <div class="field"><label>อีเมล (ที่แจ้งกับ HR)</label>
         <input class="inp" id="e-email" type="email" placeholder="your@email.com"
           autocomplete="email" inputmode="email"></div>
@@ -328,8 +330,7 @@ select.inp option{background:var(--sf2)}
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn o" id="btn-open-cam-e" style="flex:1">📷 เปิดกล้อง</button>
-        <button class="btn o" id="btn-skip-selfie" style="flex:1">ข้าม Selfie</button>
+        <button class="btn o" id="btn-open-cam-e" style="flex:1">📷 เปิดกล้องถ่าย Selfie</button>
       </div>
       <button class="btn p" id="btn-snap" style="display:none;margin-top:8px">📸 ถ่าย Selfie</button>
     </div>
@@ -362,10 +363,28 @@ select.inp option{background:var(--sf2)}
     </div>
   </div>
 
+  <div class="card">
+    <div class="sec">📸 Selfie ยืนยันตัวตน</div>
+    <div class="cam-wrap" id="ci-cam-wrap" style="display:none">
+      <video id="v-in" autoplay muted playsinline></video>
+    </div>
+    <div class="selfie-row" id="ci-selfie-done" style="display:none">
+      <img id="ci-selfie-thumb" class="selfie-thumb" alt="selfie">
+      <div>
+        <div class="selfie-ok">✓ ถ่าย Selfie แล้ว</div>
+        <button class="btn o sm" id="ci-retake" style="margin-top:6px">ถ่ายใหม่</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn o" id="ci-open-cam" style="flex:1">เปิดกล้อง</button>
+      <button class="btn p" id="ci-snap" style="flex:1;display:none">ถ่าย Selfie</button>
+    </div>
+  </div>
+
   <div class="stps">
     <div class="stp" id="st-gps"><span>⏳</span><span>GPS</span></div>
-    <div class="stp pass" id="st-dev"><span>✓</span><span>Device</span></div>
-    <div class="stp pass"><span>✓</span><span>Timestamp</span></div>
+    <div class="stp" id="st-selfie"><span>⏳</span><span>Selfie</span></div>
+    <div class="stp pass"><span>✓</span><span>เวลา</span></div>
   </div>
   <button class="btn p" id="btn-ci">เช็คอินเข้างาน</button>
   <div style="text-align:center;font-size:11px;color:var(--tx3);padding-bottom:6px" id="ci-lbl"></div>
@@ -390,6 +409,24 @@ select.inp option{background:var(--sf2)}
       <div class="gps-row"><span>สถานะ</span><span class="badge wn" id="gbg-out">กำลังหาตำแหน่ง...</span></div>
       <div class="gps-row"><span>ระยะห่าง</span><span id="gd-out" style="font-family:var(--mo);font-size:12px">— ม.</span></div>
       <div class="gps-row"><span>ความแม่นยำ</span><span id="gacc-out" style="font-family:var(--mo);font-size:12px">— ม.</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec" style="color:#f87171">📸 Selfie ยืนยันตัวตน (ออกงาน)</div>
+    <div class="cam-wrap er" id="co-cam-wrap" style="display:none">
+      <video id="v-out" autoplay muted playsinline></video>
+    </div>
+    <div class="selfie-row" id="co-selfie-done" style="display:none">
+      <img id="co-selfie-thumb" class="selfie-thumb" alt="selfie">
+      <div>
+        <div class="selfie-ok">✓ ถ่าย Selfie แล้ว</div>
+        <button class="btn o sm" id="co-retake" style="margin-top:6px">ถ่ายใหม่</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn o" id="co-open-cam" style="flex:1">เปิดกล้อง</button>
+      <button class="btn p" id="co-snap" style="flex:1;display:none">ถ่าย Selfie</button>
     </div>
   </div>
 
@@ -559,7 +596,8 @@ const S = {
   wInt: null,
   histMonths: 1,
   role: 'EMPLOYEE', hrToken: null,
-  shift: 'A', skipGps: false
+  shift: 'A', skipGps: false,
+  ciSelfie: null, coSelfie: null, ciCam: null, coCam: null
 };
 
 // CONSTANTS
@@ -776,20 +814,58 @@ function openEnrollCam() {
       const v = document.getElementById('v-enroll'); if (v) v.srcObject = stream;
       document.getElementById('btn-snap').style.display = 'flex';
       document.getElementById('btn-open-cam-e').style.display = 'none';
-      document.getElementById('btn-skip-selfie').style.display = 'none';
     })
     .catch(err => {
       showToast(err.name === 'NotAllowedError' ? 'กล้องถูกบล็อก — ไปที่ Settings → อนุญาต Camera' : 'ไม่พบกล้อง');
     });
 }
 
-function skipSelfie() {
-  S.enrollB64 = null;
-  document.getElementById('e-cam-wrap').style.display = 'none';
-  document.getElementById('btn-snap').style.display = 'none';
-  document.getElementById('btn-open-cam-e').style.display = 'none';
-  document.getElementById('btn-skip-selfie').style.display = 'none';
-  showToast('ข้าม Selfie — สามารถเพิ่มภายหลังได้', true);
+// ── กล้องสำหรับเช็คอิน/เช็คเอาต์ (พารามิเตอร์ which = 'ci' หรือ 'co') ──
+function openCam(which) {
+  const vidId  = which === 'ci' ? 'v-in' : 'v-out';
+  const wrapId = which === 'ci' ? 'ci-cam-wrap' : 'co-cam-wrap';
+  navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user', width: {ideal:720}, height: {ideal:960} } })
+    .then(stream => {
+      if (which === 'ci') S.ciCam = stream; else S.coCam = stream;
+      const wrap = document.getElementById(wrapId); if (wrap) wrap.style.display = 'block';
+      const v = document.getElementById(vidId); if (v) v.srcObject = stream;
+      document.getElementById(which + '-snap').style.display = 'block';
+      document.getElementById(which + '-open-cam').style.display = 'none';
+    })
+    .catch(err => {
+      showToast(err.name === 'NotAllowedError' ? 'กล้องถูกบล็อก — ไปที่ Settings → อนุญาต Camera' : 'ไม่พบกล้อง');
+    });
+}
+
+function snapCam(which) {
+  const vidId = which === 'ci' ? 'v-in' : 'v-out';
+  const v = document.getElementById(vidId);
+  if (!v || !v.srcObject) { showToast('กรุณาเปิดกล้องก่อน'); return; }
+  const c = document.createElement('canvas'); c.width = 480; c.height = 640;
+  c.getContext('2d').drawImage(v, 0, 0, 480, 640);
+  const b64 = c.toDataURL('image/jpeg', 0.8);
+  if (which === 'ci') S.ciSelfie = b64; else S.coSelfie = b64;
+
+  document.getElementById(which + '-selfie-thumb').src = b64;
+  document.getElementById(which + '-selfie-done').style.display = 'flex';
+  document.getElementById(which + '-cam-wrap').style.display = 'none';
+  document.getElementById(which + '-snap').style.display = 'none';
+
+  // หยุดกล้อง
+  const cam = which === 'ci' ? S.ciCam : S.coCam;
+  if (cam) { cam.getTracks().forEach(t => t.stop()); }
+
+  // อัปเดต step indicator
+  const st = document.getElementById('st-selfie');
+  if (which === 'ci' && st) { st.className = 'stp pass'; st.innerHTML = '<span>✓</span><span>Selfie ✓</span>'; }
+}
+
+function retakeCam(which) {
+  if (which === 'ci') S.ciSelfie = null; else S.coSelfie = null;
+  document.getElementById(which + '-selfie-done').style.display = 'none';
+  document.getElementById(which + '-open-cam').style.display = 'block';
+  const st = document.getElementById('st-selfie');
+  if (which === 'ci' && st) { st.className = 'stp'; st.innerHTML = '<span>⏳</span><span>Selfie</span>'; }
 }
 
 function snapEnroll() {
@@ -824,6 +900,7 @@ function doActivate() {
   const pw2 = document.getElementById('e-pw2').value;
   if (!pw || pw.length < 6) { showToast('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
   if (pw !== pw2) { showToast('รหัสผ่านทั้งสองช่องไม่ตรงกัน'); return; }
+  if (!S.enrollB64) { showToast('กรุณาถ่าย Selfie เพื่อลงทะเบียน'); return; }
   const btn = document.getElementById('btn-reg');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังลงทะเบียน...';
   gasRun('activateAccount', { employeeId: S.verifiedEmpId, password: pw, selfieBase64: S.enrollB64, deviceFingerprint: S.fp })
@@ -1010,9 +1087,10 @@ function doCheckin() {
     if (S.lat == null) { showToast('กรุณารอ GPS lock ก่อน (ดูสถานะด้านบน)'); return; }
     if (S.acc != null && S.acc > GPS_ACCURACY_MAX) { showToast(`สัญญาณ GPS ไม่แม่น (±${S.acc}ม.) ลองออกจากอาคาร`); return; }
   }
+  if (!S.ciSelfie) { showToast('กรุณาถ่าย Selfie ยืนยันตัวตนก่อนเช็คอิน'); return; }
   const btn = document.getElementById('btn-ci');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังยืนยัน...';
-  gasRun('checkIn', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: null, deviceFingerprint: S.fp })
+  gasRun('checkIn', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: S.ciSelfie, deviceFingerprint: S.fp })
     .withSuccessHandler(r => {
       btn.disabled = false; btn.textContent = 'เช็คอินเข้างาน';
       if (!r.success) { showToast(r.message); return; }
@@ -1027,9 +1105,10 @@ function doCheckin() {
 
 function doCheckout() {
   if (!S.skipGps && S.lat == null) { showToast('กรุณารอ GPS lock ก่อน'); return; }
+  if (!S.coSelfie) { showToast('กรุณาถ่าย Selfie ยืนยันตัวตนก่อนเช็คเอาต์'); return; }
   const btn = document.getElementById('btn-co');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังยืนยัน...';
-  gasRun('checkOut', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: null, deviceFingerprint: S.fp })
+  gasRun('checkOut', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: S.coSelfie, deviceFingerprint: S.fp })
     .withSuccessHandler(r => {
       btn.disabled = false; btn.textContent = 'เช็คเอาต์ออกงาน';
       if (!r.success) { showToast(r.message); return; }
@@ -1132,8 +1211,16 @@ setEB(1);
   on('e-startdate', 'keydown', function(e) { allowDateKeys(e); });
   on('btn-verify',      'click', doVerifyIdentity);
   on('btn-open-cam-e',  'click', openEnrollCam);
-  on('btn-skip-selfie', 'click', skipSelfie);
   on('btn-snap',  'click', snapEnroll);
+
+  // กล้องเช็คอิน
+  on('ci-open-cam', 'click', function() { openCam('ci'); });
+  on('ci-snap',     'click', function() { snapCam('ci'); });
+  on('ci-retake',   'click', function() { retakeCam('ci'); });
+  // กล้องเช็คเอาต์
+  on('co-open-cam', 'click', function() { openCam('co'); });
+  on('co-snap',     'click', function() { snapCam('co'); });
+  on('co-retake',   'click', function() { retakeCam('co'); });
   on('btn-reg',   'click', doActivate);
   // retake button (inside selfie-done div)
   var rtk = document.querySelector('#selfie-done .btn.o');
