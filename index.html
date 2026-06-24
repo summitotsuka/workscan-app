@@ -558,7 +558,8 @@ const S = {
   checkedIn: false, inTime: null, inDate: null,
   wInt: null,
   histMonths: 1,
-  role: 'EMPLOYEE', hrToken: null
+  role: 'EMPLOYEE', hrToken: null,
+  shift: 'A', skipGps: false
 };
 
 // CONSTANTS
@@ -629,6 +630,24 @@ function startGPS() {
 }
 
 function updateGPSUI(dist, acc, inZone, warnMsg) {
+  // กะ DRIVER: แสดงพิกัดเป็นข้อมูลประกอบ ไม่ใช่เงื่อนไขผ่าน/ไม่ผ่าน
+  if (S.skipGps) {
+    ['in', 'out'].forEach(suf => {
+      const bg = document.getElementById('gbg-' + suf);
+      const gd = document.getElementById('gd-' + suf);
+      const ga = document.getElementById('gacc-' + suf);
+      if (bg) {
+        if (dist != null) { bg.textContent = 'บันทึกพิกัด ✓ (กะคนขับ)'; bg.className = 'badge ok'; }
+        else { bg.textContent = 'กำลังหาตำแหน่ง...'; bg.className = 'badge wn'; }
+      }
+      if (gd) gd.textContent = dist != null ? dist + ' ม. จากออฟฟิศ' : '— ม.';
+      if (ga) ga.textContent = acc != null ? '±' + acc + ' ม.' : '— ม.';
+    });
+    const st = document.getElementById('st-gps');
+    if (st) { st.className = 'stp pass'; st.innerHTML = '<span>✓</span><span>GPS (เก็บข้อมูล)</span>'; }
+    return;
+  }
+
   ['in', 'out'].forEach(suf => {
     const bg = document.getElementById('gbg-' + suf);
     const gd = document.getElementById('gd-' + suf);
@@ -831,6 +850,8 @@ function doLogin() {
       S.empId = r.employeeId; S.name = r.name;
       S.role = r.role || 'EMPLOYEE';
       S.hrToken = r.hrToken || null;
+      S.shift = r.shift || 'A';
+      S.skipGps = (r.shift === 'DRIVER');  // กะคนขับ — ไม่ต้อง block GPS ฝั่ง client
       S.checkedIn = r.checkedIn || false;
       S.inTime = r.inTime || null; S.inDate = r.inDate || null;
 
@@ -984,8 +1005,11 @@ function todayStr() { return new Date().toISOString().slice(0, 10); }
 
 // ========== CHECK-IN / CHECK-OUT (no selfie required) ==========
 function doCheckin() {
-  if (S.lat == null) { showToast('กรุณารอ GPS lock ก่อน (ดูสถานะด้านบน)'); return; }
-  if (S.acc != null && S.acc > GPS_ACCURACY_MAX) { showToast(`สัญญาณ GPS ไม่แม่น (±${S.acc}ม.) ลองออกจากอาคาร`); return; }
+  // กะ DRIVER ข้าม GPS check ฝั่ง client (แต่ยังส่งพิกัดถ้ามี)
+  if (!S.skipGps) {
+    if (S.lat == null) { showToast('กรุณารอ GPS lock ก่อน (ดูสถานะด้านบน)'); return; }
+    if (S.acc != null && S.acc > GPS_ACCURACY_MAX) { showToast(`สัญญาณ GPS ไม่แม่น (±${S.acc}ม.) ลองออกจากอาคาร`); return; }
+  }
   const btn = document.getElementById('btn-ci');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังยืนยัน...';
   gasRun('checkIn', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: null, deviceFingerprint: S.fp })
@@ -1002,7 +1026,7 @@ function doCheckin() {
 }
 
 function doCheckout() {
-  if (S.lat == null) { showToast('กรุณารอ GPS lock ก่อน'); return; }
+  if (!S.skipGps && S.lat == null) { showToast('กรุณารอ GPS lock ก่อน'); return; }
   const btn = document.getElementById('btn-co');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังยืนยัน...';
   gasRun('checkOut', { employeeId: S.empId, lat: S.lat, lng: S.lng, selfieBase64: null, deviceFingerprint: S.fp })
