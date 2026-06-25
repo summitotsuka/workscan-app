@@ -47,6 +47,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .hd-name{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hd-meta{font-size:10px;color:var(--tx3);margin-top:1px}
 .hd-times{font-family:var(--mo);font-size:11px;color:var(--tx2);text-align:right;flex-shrink:0;line-height:1.5}
+.hd-card{padding:14px;text-align:center;background:var(--sf);border:1.5px solid var(--bd);border-radius:12px;cursor:pointer;transition:all .15s}
+.hd-card:active{transform:scale(.97)}
+.hd-card.sel{border-color:var(--ac);background:var(--sf2)}
+.hd-card-lbl{font-size:11px;color:var(--tx3);margin-bottom:4px}
+.hd-card-val{font-size:26px;font-weight:700}
 .nav-clock{font-family:var(--mo);font-size:11px;color:var(--tx3)}
 
 .page{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(20px + var(--sab));z-index:1}
@@ -538,32 +543,32 @@ select.inp option{background:var(--sf2)}
 <div class="page" id="page-hr-dashboard">
   <button id="hrdash-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
-    <div style="font-size:17px;font-weight:600">ภาพรวมรายวัน</div>
-    <input type="date" id="hrdash-date" class="inp" style="width:auto;padding:7px 10px;font-size:13px">
+  <div style="margin-bottom:14px">
+    <div style="font-size:17px;font-weight:600">ภาพรวมประจำวัน</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px" id="hrdash-datelabel">—</div>
   </div>
 
-  <!-- การ์ดสรุป 4 ตัว -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-    <div class="card" style="padding:14px;text-align:center;margin:0">
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">มาแล้ว</div>
-      <div style="font-size:26px;font-weight:700;color:var(--ok)" id="hd-present">—</div>
+  <!-- การ์ดสรุป 4 ตัว (คลิกเพื่อกรองรายชื่อ) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
+    <div class="hd-card" data-filter="present">
+      <div class="hd-card-lbl">มาแล้ว</div>
+      <div class="hd-card-val" style="color:var(--ok)" id="hd-present">—</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center;margin:0">
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">ยังไม่มา</div>
-      <div style="font-size:26px;font-weight:700;color:var(--tx2)" id="hd-absent">—</div>
+    <div class="hd-card" data-filter="absent">
+      <div class="hd-card-lbl">ยังไม่มา</div>
+      <div class="hd-card-val" style="color:var(--tx2)" id="hd-absent">—</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center;margin:0">
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">มาสาย</div>
-      <div style="font-size:26px;font-weight:700;color:var(--wn)" id="hd-late">—</div>
+    <div class="hd-card" data-filter="late">
+      <div class="hd-card-lbl">มาสาย</div>
+      <div class="hd-card-val" style="color:var(--wn)" id="hd-late">—</div>
     </div>
-    <div class="card" style="padding:14px;text-align:center;margin:0">
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">ยังไม่ออก</div>
-      <div style="font-size:26px;font-weight:700;color:var(--er)" id="hd-noout">—</div>
+    <div class="hd-card" data-filter="no_checkout">
+      <div class="hd-card-lbl">ยังไม่ออก</div>
+      <div class="hd-card-val" style="color:var(--er)" id="hd-noout">—</div>
     </div>
   </div>
 
-  <div style="font-size:12px;color:var(--tx3);margin:14px 2px 8px">รายชื่อพนักงาน (<span id="hd-total">0</span> คน)</div>
+  <div style="font-size:12px;color:var(--tx2);margin:16px 2px 8px;font-weight:500" id="hrdash-listlabel">รายชื่อ</div>
 
   <div id="hrdash-loading" style="text-align:center;padding:30px 0;color:var(--tx3)">
     <div class="spin" style="margin:0 auto 10px;display:block;width:20px;height:20px;border-width:3px"></div>
@@ -855,11 +860,8 @@ function go(id) {
   }
   if (id === 'history') loadHistory();
   if (id === 'hr-dashboard') {
-    // ตั้งวันที่เป็นวันนี้ทุกครั้งที่เข้า แล้วโหลด
-    const di = document.getElementById('hrdash-date');
-    const today = new Date().toISOString().slice(0,10);
-    if (di && !di.value) di.value = today;
-    loadHrDashboard(di ? di.value : today);
+    hrDashFilter = 'present';  // เริ่มที่การ์ดมาแล้วเสมอ
+    loadHrDashboard();
   }
 }
 
@@ -892,10 +894,15 @@ function applyRoleMenus(role) {
 }
 
 // ========== HR DASHBOARD ==========
-function loadHrDashboard(date) {
+let hrDashData = null;        // เก็บข้อมูลที่โหลดมา
+let hrDashFilter = 'present'; // การ์ดที่เลือกอยู่ (default = มาแล้ว)
+
+function loadHrDashboard() {
   document.getElementById('hrdash-loading').style.display = 'block';
   document.getElementById('hrdash-list').innerHTML = '';
-  gasRun('hrGetDashboard', { hrToken: S.hrToken, date: date })
+  // วันปัจจุบันเสมอ (ไม่ต้องเลือกวัน)
+  const today = new Date().toISOString().slice(0, 10);
+  gasRun('hrGetDashboard', { hrToken: S.hrToken, date: today })
     .withSuccessHandler(renderHrDashboard)
     .withFailureHandler(e => {
       document.getElementById('hrdash-loading').style.display = 'none';
@@ -907,24 +914,62 @@ function renderHrDashboard(r) {
   document.getElementById('hrdash-loading').style.display = 'none';
   if (!r || !r.success) {
     showToast((r && r.message) || 'โหลดข้อมูลไม่สำเร็จ');
-    // ถ้า token หมดอายุ → ให้ login ใหม่
     if (r && r.authError) { setTimeout(() => logout(), 1500); }
     return;
   }
+  hrDashData = r;
 
+  // แสดงวันที่ภาษาไทย
+  const dlabel = document.getElementById('hrdash-datelabel');
+  if (dlabel && r.date) {
+    const [y, m, d] = r.date.split('-');
+    const thMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    dlabel.textContent = `${parseInt(d)} ${thMonths[parseInt(m)-1]} ${parseInt(y)+543}`;
+  }
+
+  // อัปเดตตัวเลขการ์ด
   const s = r.summary || {};
   document.getElementById('hd-present').textContent = s.present || 0;
   document.getElementById('hd-absent').textContent  = s.absent || 0;
   document.getElementById('hd-late').textContent    = s.late || 0;
   document.getElementById('hd-noout').textContent   = s.noCheckout || 0;
-  document.getElementById('hd-total').textContent   = s.total || 0;
 
-  const list = document.getElementById('hrdash-list');
-  const emps = r.employees || [];
-  if (emps.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:13px">ไม่มีพนักงาน</div>';
-    return;
+  // แสดงรายชื่อตาม filter ที่เลือกอยู่
+  applyDashFilter(hrDashFilter);
+}
+
+function applyDashFilter(filter) {
+  hrDashFilter = filter;
+
+  // ไฮไลต์การ์ดที่เลือก
+  document.querySelectorAll('.hd-card').forEach(c => {
+    c.classList.toggle('sel', c.dataset.filter === filter);
+  });
+
+  if (!hrDashData) return;
+  const emps = hrDashData.employees || [];
+
+  // กรองตามสถานะ
+  let filtered, label;
+  if (filter === 'present') {
+    // "มาแล้ว" = ทุกคนที่ present (รวมสาย + ยังไม่ออก เพราะถือว่ามาแล้ว)
+    filtered = emps.filter(e => e.present);
+    label = 'รายชื่อคนที่มาแล้ว';
+  } else if (filter === 'absent') {
+    filtered = emps.filter(e => e.status === 'absent');
+    label = 'รายชื่อคนที่ยังไม่มา';
+  } else if (filter === 'late') {
+    filtered = emps.filter(e => e.late);
+    label = 'รายชื่อคนที่มาสาย';
+  } else if (filter === 'no_checkout') {
+    filtered = emps.filter(e => e.status === 'no_checkout');
+    label = 'รายชื่อคนที่ยังไม่เช็คเอาต์';
+  } else {
+    filtered = emps; label = 'รายชื่อทั้งหมด';
   }
+
+  const ll = document.getElementById('hrdash-listlabel');
+  if (ll) ll.textContent = `${label} (${filtered.length} คน)`;
 
   const badgeMap = {
     absent:      { cls: 'hd-b-absent',  txt: 'ยังไม่มา' },
@@ -933,8 +978,14 @@ function renderHrDashboard(r) {
     present:     { cls: 'hd-b-present', txt: 'ปกติ' },
   };
 
+  const list = document.getElementById('hrdash-list');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:13px">ไม่มีรายชื่อในกลุ่มนี้</div>';
+    return;
+  }
+
   let html = '';
-  emps.forEach(e => {
+  filtered.forEach(e => {
     const b = badgeMap[e.status] || badgeMap.absent;
     const times = (e.inTime || e.outTime)
       ? `${e.inTime || '—'}${e.outTime ? ' → ' + e.outTime : ''}`
@@ -1349,11 +1400,13 @@ function doCheckin() {
       S.checkedIn = true; S.inTime = r.time; S.inDate = r.date;
       document.getElementById('co-inref').textContent = r.time;
       startWT(r.time, r.date);
-      const sub = r.isLate ? `${r.name}\nมาสาย ${r.lateMin} นาที` : `${r.name}\nบันทึกเวลาเข้างานเรียบร้อย`;
+      const sub = r.isLate
+        ? `${r.name}\nมาสาย ${r.lateMin} นาที\nเช็คอินเรียบร้อย ไม่ต้องเช็คเอาต์ก็ได้`
+        : `${r.name}\nบันทึกเวลาเข้างานเรียบร้อย\nเช็คอินครั้งเดียวพอ ไม่ต้องเช็คเอาต์`;
       showRes({ icon: '✅', title: 'เช็คอินสำเร็จ!', time: r.time, tc: 'var(--ok)', sub });
       resetSelfieUI('ci');   // เคลียร์ selfie + กล้อง พร้อมเช็คครั้งใหม่
-      // พาไปหน้าเช็คเอาต์อัตโนมัติ (พร้อมสำหรับตอนเลิกงาน)
-      setTimeout(() => { if (!document.getElementById('overlay').classList.contains('show')) go('checkout'); }, 100);
+      // ไม่ auto-redirect ไปหน้าเช็คเอาต์ — พนักงานเช็คอินแล้วจบเลย
+      // (จะเช็คเอาต์ตอนเลิกงานก็กดแท็บเช็คเอาต์เองได้)
     })
     .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'เช็คอินเข้างาน'; showToast(e.message); });
 }
@@ -1452,7 +1505,10 @@ setEB(1);
 
   // HR Dashboard
   on('hrdash-back', 'click', function() { go('hr-dash'); });
-  on('hrdash-date', 'change', function() { loadHrDashboard(this.value); });
+  // คลิกการ์ดเพื่อกรองรายชื่อ
+  document.querySelectorAll('.hd-card').forEach(function(card) {
+    card.addEventListener('click', function() { applyDashFilter(card.dataset.filter); });
+  });
 
   // LOGIN
   on('btn-login', 'click', doLogin);
@@ -1475,10 +1531,10 @@ setEB(1);
   var we = document.querySelector('#page-welcome .btn.o');
   if (we) we.addEventListener('click', function() { go('enrollment'); });
 
-  // BACK buttons
+  // BACK buttons — เฉพาะปุ่ม "← กลับ" ที่ไม่มี id (ปุ่มที่มี id ผูก handler แยกแล้ว)
   document.querySelectorAll('.page').forEach(function(page) {
     var back = page.querySelector('button');
-    if (back && back.textContent.indexOf('กลับ') !== -1) {
+    if (back && !back.id && back.textContent.indexOf('กลับ') !== -1) {
       back.addEventListener('click', function() {
         if (page.id === 'page-forgot') { S.forgotStep = 1; var c = document.getElementById('fp-pw-card'); if(c) c.style.display='none'; }
         go('welcome');
