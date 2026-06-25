@@ -38,6 +38,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .hr-menu-title{font-size:15px;font-weight:600;color:var(--tx)}
 .hr-menu-desc{font-size:11px;color:var(--tx3);margin-top:2px}
 .hr-menu-arrow{font-size:22px;color:var(--tx3);flex-shrink:0}
+.hd-row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px}
+.hd-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;flex-shrink:0}
+.hd-b-absent{background:rgba(120,120,130,.15);color:var(--tx2)}
+.hd-b-late{background:rgba(245,158,11,.15);color:#fbbf24}
+.hd-b-noout{background:rgba(239,68,68,.12);color:#f87171}
+.hd-b-present{background:rgba(16,185,129,.15);color:#34d399}
+.hd-name{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-meta{font-size:10px;color:var(--tx3);margin-top:1px}
+.hd-times{font-family:var(--mo);font-size:11px;color:var(--tx2);text-align:right;flex-shrink:0;line-height:1.5}
 .nav-clock{font-family:var(--mo);font-size:11px;color:var(--tx3)}
 
 .page{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(20px + var(--sab));z-index:1}
@@ -523,10 +532,45 @@ select.inp option{background:var(--sf2)}
       <div class="hr-menu-arrow">›</div>
     </div>
   </div>
+</div>
 
-  <div style="margin-top:16px;padding:12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:10px;font-size:12px;color:var(--tx2);line-height:1.6">
-    เนื้อหาแต่ละเมนูจะทยอยเพิ่มในขั้นถัดไป — ตอนนี้ยืนยันว่าเมนู HR แยกจากเมนูพนักงานถูกต้องแล้ว
+<!-- ═══════════════ HR DASHBOARD — ภาพรวมรายวัน ═══════════════ -->
+<div class="page" id="page-hr-dashboard">
+  <button id="hrdash-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px">
+    <div style="font-size:17px;font-weight:600">ภาพรวมรายวัน</div>
+    <input type="date" id="hrdash-date" class="inp" style="width:auto;padding:7px 10px;font-size:13px">
   </div>
+
+  <!-- การ์ดสรุป 4 ตัว -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <div class="card" style="padding:14px;text-align:center;margin:0">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">มาแล้ว</div>
+      <div style="font-size:26px;font-weight:700;color:var(--ok)" id="hd-present">—</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;margin:0">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">ยังไม่มา</div>
+      <div style="font-size:26px;font-weight:700;color:var(--tx2)" id="hd-absent">—</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;margin:0">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">มาสาย</div>
+      <div style="font-size:26px;font-weight:700;color:var(--wn)" id="hd-late">—</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;margin:0">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">ยังไม่ออก</div>
+      <div style="font-size:26px;font-weight:700;color:var(--er)" id="hd-noout">—</div>
+    </div>
+  </div>
+
+  <div style="font-size:12px;color:var(--tx3);margin:14px 2px 8px">รายชื่อพนักงาน (<span id="hd-total">0</span> คน)</div>
+
+  <div id="hrdash-loading" style="text-align:center;padding:30px 0;color:var(--tx3)">
+    <div class="spin" style="margin:0 auto 10px;display:block;width:20px;height:20px;border-width:3px"></div>
+    <div style="font-size:13px">กำลังโหลด...</div>
+  </div>
+
+  <div id="hrdash-list"></div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -794,22 +838,29 @@ function go(id) {
   target.classList.add('active');
 
   // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
-  const navPages = ['checkin','checkout','history','hr-dash'];
+  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard'];
   const tabs = document.getElementById('nav-tabs');
   if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
-  // sync tab highlight
+  // sync tab highlight — หน้า HR ทั้งหมดให้แท็บ HR active
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active','co','ht'));
-  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist', 'hr-dash':'tab-hr-dash' };
+  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist', 'hr-dash':'tab-hr-dash', 'hr-dashboard':'tab-hr-dash' };
   if (m[id]) {
     const t = document.getElementById(m[id]);
-    if (t) t.classList.add(id==='checkout'?'co': id==='history'?'ht': id==='hr-dash'?'active':'active');
+    if (t) t.classList.add(id==='checkout'?'co': id==='history'?'ht':'active');
   }
 
   if (id === 'checkout' && S.inTime) {
     const ref = document.getElementById('co-inref'); if(ref) ref.textContent = S.inTime;
   }
   if (id === 'history') loadHistory();
+  if (id === 'hr-dashboard') {
+    // ตั้งวันที่เป็นวันนี้ทุกครั้งที่เข้า แล้วโหลด
+    const di = document.getElementById('hrdash-date');
+    const today = new Date().toISOString().slice(0,10);
+    if (di && !di.value) di.value = today;
+    loadHrDashboard(di ? di.value : today);
+  }
 }
 
 function tab(id, el) { go(id); }
@@ -838,6 +889,66 @@ function applyRoleMenus(role) {
     const w = document.getElementById('hr-welcome');
     if (w) w.textContent = S.name + ' · ' + S.empId;
   }
+}
+
+// ========== HR DASHBOARD ==========
+function loadHrDashboard(date) {
+  document.getElementById('hrdash-loading').style.display = 'block';
+  document.getElementById('hrdash-list').innerHTML = '';
+  gasRun('hrGetDashboard', { hrToken: S.hrToken, date: date })
+    .withSuccessHandler(renderHrDashboard)
+    .withFailureHandler(e => {
+      document.getElementById('hrdash-loading').style.display = 'none';
+      showToast(e.message || 'โหลดข้อมูลไม่สำเร็จ');
+    });
+}
+
+function renderHrDashboard(r) {
+  document.getElementById('hrdash-loading').style.display = 'none';
+  if (!r || !r.success) {
+    showToast((r && r.message) || 'โหลดข้อมูลไม่สำเร็จ');
+    // ถ้า token หมดอายุ → ให้ login ใหม่
+    if (r && r.authError) { setTimeout(() => logout(), 1500); }
+    return;
+  }
+
+  const s = r.summary || {};
+  document.getElementById('hd-present').textContent = s.present || 0;
+  document.getElementById('hd-absent').textContent  = s.absent || 0;
+  document.getElementById('hd-late').textContent    = s.late || 0;
+  document.getElementById('hd-noout').textContent   = s.noCheckout || 0;
+  document.getElementById('hd-total').textContent   = s.total || 0;
+
+  const list = document.getElementById('hrdash-list');
+  const emps = r.employees || [];
+  if (emps.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:13px">ไม่มีพนักงาน</div>';
+    return;
+  }
+
+  const badgeMap = {
+    absent:      { cls: 'hd-b-absent',  txt: 'ยังไม่มา' },
+    late:        { cls: 'hd-b-late',    txt: 'มาสาย' },
+    no_checkout: { cls: 'hd-b-noout',   txt: 'ยังไม่ออก' },
+    present:     { cls: 'hd-b-present', txt: 'ปกติ' },
+  };
+
+  let html = '';
+  emps.forEach(e => {
+    const b = badgeMap[e.status] || badgeMap.absent;
+    const times = (e.inTime || e.outTime)
+      ? `${e.inTime || '—'}${e.outTime ? ' → ' + e.outTime : ''}`
+      : '';
+    html += `<div class="hd-row">
+      <span class="hd-badge ${b.cls}">${b.txt}</span>
+      <div style="flex:1;min-width:0">
+        <div class="hd-name">${e.name}</div>
+        <div class="hd-meta">${e.empId} · ${e.department} · กะ ${e.shift}</div>
+      </div>
+      ${times ? `<div class="hd-times">${times}</div>` : ''}
+    </div>`;
+  });
+  list.innerHTML = html;
 }
 
 
@@ -1333,11 +1444,15 @@ setEB(1);
   on('tab-hist', 'click', function() { tab('history',  document.getElementById('tab-hist')); });
   on('tab-hr-dash', 'click', function() { go('hr-dash'); });
 
-  // HR menu cards (ขั้นถัดไปจะผูกกับหน้าจริง)
-  on('hr-menu-dashboard', 'click', function() { showToast('ภาพรวมรายวัน — จะเพิ่มในขั้นถัดไป'); });
+  // HR menu cards
+  on('hr-menu-dashboard', 'click', function() { go('hr-dashboard'); });
   on('hr-menu-employees', 'click', function() { showToast('จัดการพนักงาน — จะเพิ่มในขั้นถัดไป'); });
   on('hr-menu-report',    'click', function() { showToast('รายงานรายบุคคล — จะเพิ่มในขั้นถัดไป'); });
   on('hr-menu-export',    'click', function() { showToast('Export เงินเดือน — จะเพิ่มในขั้นถัดไป'); });
+
+  // HR Dashboard
+  on('hrdash-back', 'click', function() { go('hr-dash'); });
+  on('hrdash-date', 'change', function() { loadHrDashboard(this.value); });
 
   // LOGIN
   on('btn-login', 'click', doLogin);
