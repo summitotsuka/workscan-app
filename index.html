@@ -578,6 +578,103 @@ select.inp option{background:var(--sf2)}
   <div id="hrdash-list"></div>
 </div>
 
+<!-- ═══════════════ HR — จัดการพนักงาน ═══════════════ -->
+<div class="page" id="page-hr-employees">
+  <button id="hremp-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
+
+  <div style="font-size:17px;font-weight:600;margin-bottom:12px">จัดการพนักงาน</div>
+
+  <!-- ค้นหา -->
+  <div class="card" style="padding:14px">
+    <label style="font-size:12px;color:var(--tx2);display:block;margin-bottom:6px">ค้นหาด้วยรหัสพนักงาน</label>
+    <div style="display:flex;gap:8px">
+      <input class="inp" id="hremp-search" placeholder="เช่น EMP001" autocomplete="off" style="text-transform:uppercase;flex:1">
+      <button class="btn p" id="hremp-search-btn" style="width:auto;padding:0 18px">ค้นหา</button>
+    </div>
+  </div>
+
+  <!-- ผลลัพธ์ค้นหา / ฟอร์มแก้ไข -->
+  <div id="hremp-result" style="display:none">
+    <div class="card" style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div id="hremp-title" style="font-size:15px;font-weight:600">—</div>
+          <div id="hremp-status-line" style="font-size:11px;margin-top:2px">—</div>
+        </div>
+        <span id="hremp-mode-badge" style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px"></span>
+      </div>
+
+      <input type="hidden" id="hremp-empid-locked">
+
+      <div class="field"><label>รหัสพนักงาน (แก้ไม่ได้)</label>
+        <input class="inp" id="hremp-f-empid" disabled style="opacity:.6"></div>
+      <div class="field"><label>ชื่อ-นามสกุล</label>
+        <input class="inp" id="hremp-f-fullname" placeholder="ชื่อ นามสกุล"></div>
+      <div class="field"><label>คำนำหน้า</label>
+        <input class="inp" id="hremp-f-title" placeholder="นาย / นาง / นางสาว"></div>
+      <div class="field"><label>แผนก</label>
+        <input class="inp" id="hremp-f-department" placeholder="แผนก"></div>
+      <div class="field"><label>เบอร์โทร</label>
+        <input class="inp" id="hremp-f-phone" inputmode="tel" placeholder="08x-xxx-xxxx"></div>
+      <div class="field"><label>อีเมล</label>
+        <input class="inp" id="hremp-f-email" type="email" placeholder="email@example.com"></div>
+      <div class="field"><label>วันที่เริ่มงาน</label>
+        <input class="inp" id="hremp-f-startdate" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+      <div class="field"><label>กะ</label>
+        <select class="inp" id="hremp-f-shift">
+          <option value="A">A — เช้า (08:30–18:00)</option>
+          <option value="B">B — กลางคืน (20:30–06:00)</option>
+          <option value="CLEANING">CLEANING — แม่บ้าน</option>
+          <option value="FLEX">FLEX — ยืดหยุ่น</option>
+          <option value="DRIVER">DRIVER — คนขับรถผู้บริหาร</option>
+        </select></div>
+      <div class="field"><label>Payroll_ID (รหัสเงินเดือน)</label>
+        <input class="inp" id="hremp-f-payrollid" placeholder="รหัสในโปรแกรมเงินเดือน"></div>
+      <div class="field"><label>สิทธิ์ (Role)</label>
+        <input class="inp" id="hremp-f-role" disabled style="opacity:.6">
+        <div style="font-size:10px;color:var(--tx3);margin-top:4px">แก้สิทธิ์ HR ได้ที่ Google Sheet เท่านั้น (เพื่อความปลอดภัย)</div></div>
+
+      <button class="btn p" id="hremp-save" style="margin-top:6px">บันทึกข้อมูล</button>
+    </div>
+
+    <!-- ปุ่มจัดการพิเศษ (เฉพาะตอนแก้ไขคนที่มีอยู่) -->
+    <div class="card" id="hremp-actions" style="padding:14px">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500">จัดการบัญชี</div>
+      <div style="display:grid;gap:8px">
+        <button class="btn o" id="hremp-reset-device">รีเซ็ต Device (เปลี่ยนมือถือ)</button>
+        <button class="btn o" id="hremp-reset-pw">รีเซ็ตรหัสผ่าน (ลงทะเบียนใหม่)</button>
+        <button class="btn o" id="hremp-toggle-status">เปิด/ปิดบัญชี</button>
+      </div>
+    </div>
+
+    <!-- B4: Manual Entry คีย์เวลาย้อนหลัง -->
+    <div class="card" id="hremp-manual" style="padding:14px">
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:4px;font-weight:500">คีย์เวลาย้อนหลัง (Manual Entry)</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;line-height:1.5">สำหรับพนักงานที่ออกนอกสถานที่ หรือลืมเช็คอิน/เอาต์ — ถ้าคีย์ IN ให้คนที่มี "ยังไม่เช็คอิน" ระบบจะจับคู่และคำนวณชั่วโมงให้อัตโนมัติ</div>
+      <div class="field"><label>วันที่</label>
+        <input class="inp" id="hrman-date" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label>ประเภท</label>
+          <select class="inp" id="hrman-type">
+            <option value="IN">เข้างาน (IN)</option>
+            <option value="OUT">ออกงาน (OUT)</option>
+          </select></div>
+        <div class="field" style="flex:1"><label>เวลา (HH:mm)</label>
+          <input class="inp" id="hrman-time" placeholder="08:30" inputmode="numeric" maxlength="5"></div>
+      </div>
+      <button class="btn p" id="hrman-submit" style="margin-top:6px">บันทึกเวลาย้อนหลัง</button>
+    </div>
+  </div>
+
+  <!-- ไม่พบ → เสนอเพิ่มใหม่ -->
+  <div id="hremp-notfound" style="display:none">
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:12px" id="hremp-notfound-msg">ไม่พบรหัสนี้</div>
+      <button class="btn p" id="hremp-add-new">+ เพิ่มพนักงานใหม่</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="res-card">
     <div class="r-icon" id="ri">✅</div>
@@ -843,13 +940,13 @@ function go(id) {
   target.classList.add('active');
 
   // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
-  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard'];
+  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees'];
   const tabs = document.getElementById('nav-tabs');
   if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
   // sync tab highlight — หน้า HR ทั้งหมดให้แท็บ HR active
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active','co','ht'));
-  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist', 'hr-dash':'tab-hr-dash', 'hr-dashboard':'tab-hr-dash' };
+  const m = { checkin:'tab-in', checkout:'tab-out', history:'tab-hist', 'hr-dash':'tab-hr-dash', 'hr-dashboard':'tab-hr-dash', 'hr-employees':'tab-hr-dash' };
   if (m[id]) {
     const t = document.getElementById(m[id]);
     if (t) t.classList.add(id==='checkout'?'co': id==='history'?'ht':'active');
@@ -862,6 +959,12 @@ function go(id) {
   if (id === 'hr-dashboard') {
     hrDashFilter = 'present';  // เริ่มที่การ์ดมาแล้วเสมอ
     loadHrDashboard();
+  }
+  if (id === 'hr-employees') {
+    // เคลียร์ผลค้นหาเก่า
+    const sr = document.getElementById('hremp-search'); if (sr) sr.value = '';
+    const rs = document.getElementById('hremp-result'); if (rs) rs.style.display = 'none';
+    const nf = document.getElementById('hremp-notfound'); if (nf) nf.style.display = 'none';
   }
 }
 
@@ -1000,6 +1103,219 @@ function applyDashFilter(filter) {
     </div>`;
   });
   list.innerHTML = html;
+}
+
+// ========== HR — จัดการพนักงาน ==========
+let hremp_mode = null;   // 'edit' | 'add'
+
+function hrSearchEmployee() {
+  const id = document.getElementById('hremp-search').value.trim().toUpperCase();
+  if (!id) { showToast('กรุณากรอกรหัสพนักงาน'); return; }
+  const btn = document.getElementById('hremp-search-btn');
+  btn.disabled = true; btn.textContent = '...';
+  document.getElementById('hremp-result').style.display = 'none';
+  document.getElementById('hremp-notfound').style.display = 'none';
+
+  gasRun('hrFindEmployee', { hrToken: S.hrToken, employeeId: id })
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = 'ค้นหา';
+      if (r && r.success) {
+        fillEmployeeForm(r.employee, 'edit');
+      } else if (r && r.notFound) {
+        document.getElementById('hremp-notfound-msg').textContent = 'ไม่พบรหัส ' + id + ' ในระบบ';
+        document.getElementById('hremp-notfound').style.display = 'block';
+        if (r.authError) setTimeout(() => logout(), 1500);
+      } else {
+        showToast((r && r.message) || 'ค้นหาไม่สำเร็จ');
+        if (r && r.authError) setTimeout(() => logout(), 1500);
+      }
+    })
+    .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'ค้นหา'; showToast(e.message); });
+}
+
+function fillEmployeeForm(emp, mode) {
+  hremp_mode = mode;
+  document.getElementById('hremp-result').style.display = 'block';
+  document.getElementById('hremp-notfound').style.display = 'none';
+
+  // โหมด edit = มีคนอยู่แล้ว, add = เพิ่มใหม่
+  const badge = document.getElementById('hremp-mode-badge');
+  const actions = document.getElementById('hremp-actions');
+  const manual = document.getElementById('hremp-manual');
+  const empidField = document.getElementById('hremp-f-empid');
+
+  // Manual Entry แสดงเฉพาะโหมด edit (คนที่มีอยู่จริง)
+  if (manual) manual.style.display = (mode === 'edit') ? 'block' : 'none';
+
+  if (mode === 'edit') {
+    badge.textContent = 'แก้ไข';
+    badge.style.background = 'rgba(59,130,246,.15)'; badge.style.color = '#60a5fa';
+    actions.style.display = 'block';
+    empidField.disabled = true; empidField.style.opacity = '.6';
+    document.getElementById('hremp-title').textContent = emp.fullName || emp.employeeId;
+    const stTxt = emp.status === 'ACTIVE' ? 'ใช้งานอยู่' : emp.status === 'PENDING' ? 'รอลงทะเบียน' : 'ปิดบัญชี';
+    const stCol = emp.status === 'ACTIVE' ? 'var(--ok)' : emp.status === 'PENDING' ? 'var(--wn)' : 'var(--er)';
+    const sl = document.getElementById('hremp-status-line');
+    sl.textContent = stTxt + (emp.hasDevice ? ' · ผูกอุปกรณ์แล้ว' : ' · ยังไม่ผูกอุปกรณ์');
+    sl.style.color = stCol;
+  } else {
+    badge.textContent = 'เพิ่มใหม่';
+    badge.style.background = 'rgba(16,185,129,.15)'; badge.style.color = '#34d399';
+    actions.style.display = 'none';
+    empidField.disabled = false; empidField.style.opacity = '1';
+    document.getElementById('hremp-title').textContent = 'พนักงานใหม่';
+    document.getElementById('hremp-status-line').textContent = 'สถานะจะเป็น PENDING รอพนักงานลงทะเบียน';
+    document.getElementById('hremp-status-line').style.color = 'var(--tx3)';
+  }
+
+  // เติมค่าในฟอร์ม
+  document.getElementById('hremp-f-empid').value      = emp.employeeId || '';
+  document.getElementById('hremp-empid-locked').value = emp.employeeId || '';
+  document.getElementById('hremp-f-fullname').value   = emp.fullName || '';
+  document.getElementById('hremp-f-title').value      = emp.title || '';
+  document.getElementById('hremp-f-department').value = emp.department || '';
+  document.getElementById('hremp-f-phone').value      = emp.phone || '';
+  document.getElementById('hremp-f-email').value      = emp.email || '';
+  // วันที่: yyyy-MM-dd → วว/ดด/ปปปป
+  document.getElementById('hremp-f-startdate').value  = emp.startDate ? thaiDateDisplay(emp.startDate) : '';
+  document.getElementById('hremp-f-shift').value      = emp.shift || 'A';
+  document.getElementById('hremp-f-payrollid').value  = emp.payrollId || '';
+  document.getElementById('hremp-f-role').value       = emp.role || 'EMPLOYEE';
+
+  // toggle status button label
+  if (mode === 'edit') {
+    const tb = document.getElementById('hremp-toggle-status');
+    tb.textContent = emp.status === 'INACTIVE' ? 'เปิดบัญชีอีกครั้ง' : 'ปิดบัญชี (ลาออก)';
+    tb.dataset.current = emp.status;
+  }
+}
+
+// แปลง yyyy-MM-dd → dd/MM/yyyy สำหรับแสดง
+function thaiDateDisplay(isoDate) {
+  if (!isoDate || isoDate.indexOf('-') === -1) return isoDate || '';
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function hrCollectFields() {
+  return {
+    fullName:   document.getElementById('hremp-f-fullname').value.trim(),
+    title:      document.getElementById('hremp-f-title').value.trim(),
+    department: document.getElementById('hremp-f-department').value.trim(),
+    phone:      document.getElementById('hremp-f-phone').value.trim(),
+    email:      document.getElementById('hremp-f-email').value.trim(),
+    startDate:  document.getElementById('hremp-f-startdate').value.trim(),
+    shift:      document.getElementById('hremp-f-shift').value,
+    payrollId:  document.getElementById('hremp-f-payrollid').value.trim(),
+  };
+}
+
+function hrSaveEmployee() {
+  const fields = hrCollectFields();
+  const btn = document.getElementById('hremp-save');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> บันทึก...';
+
+  if (hremp_mode === 'add') {
+    fields.employeeId = document.getElementById('hremp-f-empid').value.trim().toUpperCase();
+    if (!fields.employeeId) { btn.disabled = false; btn.textContent = 'บันทึกข้อมูล'; showToast('กรุณากรอกรหัสพนักงาน'); return; }
+    gasRun('hrAddEmployee', { hrToken: S.hrToken, fields: fields })
+      .withSuccessHandler(r => {
+        btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+        showToast(r.message, r.success);
+        if (r.success) { document.getElementById('hremp-result').style.display = 'none'; document.getElementById('hremp-search').value = ''; }
+        if (r.authError) setTimeout(() => logout(), 1500);
+      })
+      .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'บันทึกข้อมูล'; showToast(e.message); });
+  } else {
+    const empId = document.getElementById('hremp-empid-locked').value;
+    gasRun('hrUpdateEmployee', { hrToken: S.hrToken, employeeId: empId, fields: fields })
+      .withSuccessHandler(r => {
+        btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+        showToast(r.message, r.success);
+        if (r.authError) setTimeout(() => logout(), 1500);
+      })
+      .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'บันทึกข้อมูล'; showToast(e.message); });
+  }
+}
+
+function hrEmpAction(action, confirmMsg) {
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  const empId = document.getElementById('hremp-empid-locked').value;
+  const fields = { _action: action };
+  gasRun('hrUpdateEmployee', { hrToken: S.hrToken, employeeId: empId, fields: fields })
+    .withSuccessHandler(r => {
+      showToast(r.message, r.success);
+      if (r.success) hrSearchEmployeeById(empId);  // reload
+      if (r.authError) setTimeout(() => logout(), 1500);
+    })
+    .withFailureHandler(e => showToast(e.message));
+}
+
+function hrSearchEmployeeById(id) {
+  document.getElementById('hremp-search').value = id;
+  hrSearchEmployee();
+}
+
+function hrToggleStatus() {
+  const tb = document.getElementById('hremp-toggle-status');
+  const current = tb.dataset.current;
+  const empId = document.getElementById('hremp-empid-locked').value;
+  const newStatus = current === 'INACTIVE' ? 'ACTIVE' : 'INACTIVE';
+  const msg = newStatus === 'INACTIVE'
+    ? 'ปิดบัญชีพนักงานคนนี้? (พนักงานจะ login ไม่ได้ แต่กู้คืนได้ภายหลัง)'
+    : 'เปิดบัญชีพนักงานคนนี้อีกครั้ง?';
+  if (!confirm(msg)) return;
+  gasRun('hrUpdateEmployee', { hrToken: S.hrToken, employeeId: empId, fields: { status: newStatus } })
+    .withSuccessHandler(r => {
+      showToast(r.success ? (newStatus === 'INACTIVE' ? 'ปิดบัญชีเรียบร้อย' : 'เปิดบัญชีเรียบร้อย') : r.message, r.success);
+      if (r.success) hrSearchEmployeeById(empId);
+      if (r.authError) setTimeout(() => logout(), 1500);
+    })
+    .withFailureHandler(e => showToast(e.message));
+}
+
+function hrAddNewEmployee() {
+  // เปิดฟอร์มเปล่า โดยใช้รหัสที่ค้นหา
+  const id = document.getElementById('hremp-search').value.trim().toUpperCase();
+  fillEmployeeForm({ employeeId: id, shift: 'A', role: 'EMPLOYEE', status: 'PENDING' }, 'add');
+}
+
+// ── B4: Manual Entry ──
+function maskTime(el) {
+  let raw = el.value.replace(/\D/g, '').slice(0, 4);
+  if (raw.length >= 3) el.value = raw.slice(0, 2) + ':' + raw.slice(2);
+  else el.value = raw;
+}
+
+function hrSubmitManual() {
+  const empId = document.getElementById('hremp-empid-locked').value;
+  if (!empId) { showToast('กรุณาค้นหาพนักงานก่อน'); return; }
+  const date = document.getElementById('hrman-date').value.trim();
+  const type = document.getElementById('hrman-type').value;
+  const time = document.getElementById('hrman-time').value.trim();
+  if (!date || !time) { showToast('กรุณากรอกวันที่และเวลา'); return; }
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(date)) { showToast('วันที่ต้องเป็น วว/ดด/ปปปป'); return; }
+  if (!/^\d{1,2}:\d{2}$/.test(time)) { showToast('เวลาต้องเป็น HH:mm เช่น 08:30'); return; }
+
+  const btn = document.getElementById('hrman-submit');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> บันทึก...';
+  gasRun('hrManualEntry', { hrToken: S.hrToken, employeeId: empId, date: date, type: type, time: time })
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = 'บันทึกเวลาย้อนหลัง';
+      showToast(r.message, r.success);
+      if (r.success) {
+        document.getElementById('hrman-date').value = '';
+        document.getElementById('hrman-time').value = '';
+      }
+      if (r.authError) setTimeout(() => logout(), 1500);
+    })
+    .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'บันทึกเวลาย้อนหลัง'; showToast(e.message); });
+}
+
+// helper: ค้นหาซ้ำด้วย id (ใช้หลัง toggle status)
+function hrSearchEmployeeById(id) {
+  document.getElementById('hremp-search').value = id;
+  hrSearchEmployee();
 }
 
 
@@ -1499,7 +1815,7 @@ setEB(1);
 
   // HR menu cards
   on('hr-menu-dashboard', 'click', function() { go('hr-dashboard'); });
-  on('hr-menu-employees', 'click', function() { showToast('จัดการพนักงาน — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-employees', 'click', function() { go('hr-employees'); });
   on('hr-menu-report',    'click', function() { showToast('รายงานรายบุคคล — จะเพิ่มในขั้นถัดไป'); });
   on('hr-menu-export',    'click', function() { showToast('Export เงินเดือน — จะเพิ่มในขั้นถัดไป'); });
 
@@ -1509,6 +1825,29 @@ setEB(1);
   document.querySelectorAll('.hd-card').forEach(function(card) {
     card.addEventListener('click', function() { applyDashFilter(card.dataset.filter); });
   });
+
+  // HR จัดการพนักงาน
+  on('hremp-back', 'click', function() { go('hr-dash'); });
+  on('hremp-search-btn', 'click', hrSearchEmployee);
+  on('hremp-search', 'input', function() { this.value = this.value.toUpperCase(); });
+  on('hremp-search', 'keydown', function(e) { if (e.key === 'Enter') hrSearchEmployee(); });
+  on('hremp-f-empid', 'input', function() { this.value = this.value.toUpperCase(); });
+  on('hremp-f-startdate', 'input', function() { maskDate(this); });
+  on('hremp-f-startdate', 'keydown', function(e) { allowDateKeys(e); });
+  on('hremp-save', 'click', hrSaveEmployee);
+  on('hremp-add-new', 'click', hrAddNewEmployee);
+  on('hremp-reset-device', 'click', function() {
+    hrEmpAction('resetDevice', 'รีเซ็ต Device ของพนักงานคนนี้? (พนักงานจะผูกอุปกรณ์ใหม่ได้)');
+  });
+  on('hremp-reset-pw', 'click', function() {
+    hrEmpAction('resetPassword', 'รีเซ็ตรหัสผ่าน? พนักงานต้องลงทะเบียนใหม่ทั้งหมด (รหัสผ่าน + อุปกรณ์)');
+  });
+  on('hremp-toggle-status', 'click', hrToggleStatus);
+  // B4 Manual Entry
+  on('hrman-date', 'input', function() { maskDate(this); });
+  on('hrman-date', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrman-time', 'input', function() { maskTime(this); });
+  on('hrman-submit', 'click', hrSubmitManual);
 
   // LOGIN
   on('btn-login', 'click', doLogin);
