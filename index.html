@@ -52,6 +52,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .hd-card.sel{border-color:var(--ac);background:var(--sf2)}
 .hd-card-lbl{font-size:11px;color:var(--tx3);margin-bottom:4px}
 .hd-card-val{font-size:26px;font-weight:700}
+.exp-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .12s}
+.exp-row:active{background:var(--sf2)}
+.exp-row.sel{background:rgba(124,58,237,.08)}
+.exp-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--bd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.exp-row.sel .exp-cb{background:var(--ac);border-color:var(--ac)}
+.exp-nm{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp-meta{font-size:10px;color:var(--tx3)}
 .nav-clock{font-family:var(--mo);font-size:11px;color:var(--tx3)}
 
 .page{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(20px + var(--sab));z-index:1}
@@ -675,6 +682,52 @@ select.inp option{background:var(--sf2)}
   </div>
 </div>
 
+<!-- ═══════════════ HR EXPORT เงินเดือน ═══════════════ -->
+<div class="page" id="page-hr-export">
+  <button id="hrexp-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
+
+  <div style="margin-bottom:14px">
+    <div style="font-size:17px;font-weight:600">Export เงินเดือน</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px">ดาวน์โหลดเวลาเข้า-ออกเป็นไฟล์ .txt สำหรับโปรแกรมเงินเดือน</div>
+  </div>
+
+  <!-- ช่วงวันที่ -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500">ช่วงวันที่</div>
+    <div style="display:flex;gap:8px">
+      <div class="field" style="flex:1;margin:0"><label>ตั้งแต่</label>
+        <input class="inp" id="hrexp-from" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+      <div class="field" style="flex:1;margin:0"><label>ถึง</label>
+        <input class="inp" id="hrexp-to" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+    </div>
+  </div>
+
+  <!-- เลือกพนักงาน -->
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--tx2);font-weight:500">เลือกพนักงาน</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn o sm" id="hrexp-all">เลือกทั้งหมด</button>
+        <button class="btn o sm" id="hrexp-none">ล้าง</button>
+      </div>
+    </div>
+    <input class="inp" id="hrexp-search" placeholder="ค้นหาชื่อ..." style="margin-bottom:8px;font-size:13px">
+    <div id="hrexp-emplist" style="max-height:240px;overflow-y:auto">
+      <div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">กำลังโหลด...</div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:8px" id="hrexp-count">เลือกแล้ว 0 คน</div>
+  </div>
+
+  <button class="btn p" id="hrexp-generate" style="margin-bottom:10px">สร้างไฟล์ Export</button>
+
+  <!-- ผลลัพธ์ -->
+  <div class="card" id="hrexp-result" style="display:none;padding:14px">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:8px;font-weight:500">ตัวอย่างข้อมูล (<span id="hrexp-linecount">0</span> บรรทัด)</div>
+    <pre id="hrexp-preview" style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:11px;font-family:var(--mo);overflow-x:auto;max-height:200px;overflow-y:auto;white-space:pre;color:var(--tx)"></pre>
+    <button class="btn p" id="hrexp-download" style="margin-top:10px">⤓ ดาวน์โหลดไฟล์ .txt</button>
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="res-card">
     <div class="r-icon" id="ri">✅</div>
@@ -940,7 +993,7 @@ function go(id) {
   target.classList.add('active');
 
   // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
-  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees'];
+  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees','hr-export'];
   const tabs = document.getElementById('nav-tabs');
   if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
@@ -959,6 +1012,9 @@ function go(id) {
   if (id === 'hr-dashboard') {
     hrDashFilter = 'present';  // เริ่มที่การ์ดมาแล้วเสมอ
     loadHrDashboard();
+  }
+  if (id === 'hr-export') {
+    loadExportPage();
   }
   if (id === 'hr-employees') {
     // เคลียร์ผลค้นหาเก่า
@@ -1103,6 +1159,141 @@ function applyDashFilter(filter) {
     </div>`;
   });
   list.innerHTML = html;
+}
+
+// ========== HR — EXPORT เงินเดือน ==========
+let hrExpEmployees = [];        // รายชื่อทั้งหมด
+let hrExpSelected = {};         // empId -> true
+let hrExpContent = '';          // เนื้อหาไฟล์ที่ generate แล้ว
+let hrExpFilename = 'payroll.txt';
+
+function loadExportPage() {
+  // reset
+  hrExpSelected = {};
+  hrExpContent = '';
+  document.getElementById('hrexp-result').style.display = 'none';
+  document.getElementById('hrexp-search').value = '';
+  // ตั้งวันที่ default = เดือนปัจจุบัน (1 ถึงวันนี้)
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('hrexp-from').value = fmtDateTH(first);
+  document.getElementById('hrexp-to').value   = fmtDateTH(now);
+
+  // โหลดรายชื่อ
+  document.getElementById('hrexp-emplist').innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">กำลังโหลด...</div>';
+  gasRun('hrGetEmployeeList', { hrToken: S.hrToken })
+    .withSuccessHandler(r => {
+      if (!r || !r.success) {
+        showToast((r && r.message) || 'โหลดรายชื่อไม่สำเร็จ');
+        if (r && r.authError) setTimeout(() => logout(), 1500);
+        return;
+      }
+      hrExpEmployees = r.employees || [];
+      renderExpList('');
+    })
+    .withFailureHandler(e => showToast(e.message));
+}
+
+function fmtDateTH(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function renderExpList(search) {
+  const list = document.getElementById('hrexp-emplist');
+  const q = (search || '').toLowerCase();
+  const filtered = hrExpEmployees.filter(e =>
+    !q || String(e.name).toLowerCase().includes(q) || String(e.empId).toLowerCase().includes(q)
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">ไม่พบพนักงาน</div>';
+    return;
+  }
+  let html = '';
+  filtered.forEach(e => {
+    const sel = hrExpSelected[e.empId] ? 'sel' : '';
+    const check = hrExpSelected[e.empId] ? '✓' : '';
+    const noPayroll = !e.payrollId ? ' <span style="color:var(--er)">(ไม่มี Payroll_ID)</span>' : '';
+    html += `<div class="exp-row ${sel}" data-id="${e.empId}">
+      <div class="exp-cb">${check}</div>
+      <div style="flex:1;min-width:0">
+        <div class="exp-nm">${e.name}</div>
+        <div class="exp-meta">${e.empId} · ${e.department} · กะ ${e.shift}${noPayroll}</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  // bind clicks
+  list.querySelectorAll('.exp-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.id;
+      if (hrExpSelected[id]) delete hrExpSelected[id];
+      else hrExpSelected[id] = true;
+      renderExpList(document.getElementById('hrexp-search').value);
+      updateExpCount();
+    });
+  });
+}
+
+function updateExpCount() {
+  const n = Object.keys(hrExpSelected).length;
+  const total = hrExpEmployees.length;
+  document.getElementById('hrexp-count').textContent =
+    n === 0 ? `ยังไม่เลือก (ว่าง = ทุกคน ${total} คน)` : `เลือกแล้ว ${n} คน`;
+}
+
+function hrExpSelectAll() {
+  hrExpEmployees.forEach(e => { hrExpSelected[e.empId] = true; });
+  renderExpList(document.getElementById('hrexp-search').value);
+  updateExpCount();
+}
+function hrExpClearAll() {
+  hrExpSelected = {};
+  renderExpList(document.getElementById('hrexp-search').value);
+  updateExpCount();
+}
+
+function hrExpGenerate() {
+  const from = document.getElementById('hrexp-from').value.trim();
+  const to   = document.getElementById('hrexp-to').value.trim();
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(from) || !/^\d{2}\/\d{2}\/\d{4}$/.test(to)) {
+    showToast('กรุณากรอกวันที่ให้ถูกต้อง (วว/ดด/ปปปป)'); return;
+  }
+  const ids = Object.keys(hrExpSelected);  // ว่าง = ทุกคน
+  const btn = document.getElementById('hrexp-generate');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังสร้าง...';
+  gasRun('hrExportPayroll', { hrToken: S.hrToken, dateFrom: from, dateTo: to, employeeIds: ids })
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = 'สร้างไฟล์ Export';
+      if (!r || !r.success) {
+        showToast((r && r.message) || 'สร้างไฟล์ไม่สำเร็จ');
+        if (r && r.authError) setTimeout(() => logout(), 1500);
+        return;
+      }
+      if (r.lineCount === 0) { showToast('ไม่มีข้อมูลในช่วงที่เลือก'); return; }
+      hrExpContent = r.content;
+      hrExpFilename = r.filename || 'payroll.txt';
+      document.getElementById('hrexp-linecount').textContent = r.lineCount;
+      // แสดงตัวอย่าง 20 บรรทัดแรก
+      const preview = r.content.split('\r\n').slice(0, 20).join('\n');
+      document.getElementById('hrexp-preview').textContent = preview + (r.lineCount > 20 ? '\n...' : '');
+      document.getElementById('hrexp-result').style.display = 'block';
+      showToast(`สร้างไฟล์สำเร็จ ${r.lineCount} บรรทัด`, true);
+    })
+    .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'สร้างไฟล์ Export'; showToast(e.message); });
+}
+
+function hrExpDownload() {
+  if (!hrExpContent) { showToast('กรุณาสร้างไฟล์ก่อน'); return; }
+  // ใส่ BOM เผื่อโปรแกรมเงินเดือนอ่าน encoding — แต่ไฟล์ตัวอย่างไม่มี BOM จึงไม่ใส่
+  const blob = new Blob([hrExpContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = hrExpFilename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ========== HR — จัดการพนักงาน ==========
@@ -1817,7 +2008,19 @@ setEB(1);
   on('hr-menu-dashboard', 'click', function() { go('hr-dashboard'); });
   on('hr-menu-employees', 'click', function() { go('hr-employees'); });
   on('hr-menu-report',    'click', function() { showToast('รายงานรายบุคคล — จะเพิ่มในขั้นถัดไป'); });
-  on('hr-menu-export',    'click', function() { showToast('Export เงินเดือน — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-export',    'click', function() { go('hr-export'); });
+
+  // HR Export เงินเดือน
+  on('hrexp-back', 'click', function() { go('hr-dash'); });
+  on('hrexp-from', 'input', function() { maskDate(this); });
+  on('hrexp-from', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrexp-to', 'input', function() { maskDate(this); });
+  on('hrexp-to', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrexp-search', 'input', function() { renderExpList(this.value); });
+  on('hrexp-all', 'click', hrExpSelectAll);
+  on('hrexp-none', 'click', hrExpClearAll);
+  on('hrexp-generate', 'click', hrExpGenerate);
+  on('hrexp-download', 'click', hrExpDownload);
 
   // HR Dashboard
   on('hrdash-back', 'click', function() { go('hr-dash'); });
