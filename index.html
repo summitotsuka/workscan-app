@@ -59,6 +59,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .exp-row.sel .exp-cb{background:var(--ac);border-color:var(--ac)}
 .exp-nm{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .exp-meta{font-size:10px;color:var(--tx3)}
+.rep-stat{flex:1;min-width:64px;padding:7px 0;border-radius:8px;border:1px solid var(--bd2);background:var(--sf2);color:var(--tx2);font-size:12px;font-weight:500;font-family:var(--fn);cursor:pointer;transition:all .15s}
+.rep-stat.active{background:var(--ac);border-color:var(--ac);color:#fff}
+.rep-table{width:100%;border-collapse:collapse;font-size:11px}
+.rep-table th{background:var(--sf2);padding:8px 6px;text-align:left;color:var(--tx3);font-weight:500;white-space:nowrap;position:sticky;top:0}
+.rep-table td{padding:7px 6px;border-top:1px solid var(--bd);white-space:nowrap;color:var(--tx)}
+.rep-bdg{font-size:9px;padding:2px 6px;border-radius:5px;font-weight:600}
 .nav-clock{font-family:var(--mo);font-size:11px;color:var(--tx3)}
 
 .page{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(20px + var(--sab));z-index:1}
@@ -728,6 +734,90 @@ select.inp option{background:var(--sf2)}
   </div>
 </div>
 
+<!-- ═══════════════ HR รายงาน ═══════════════ -->
+<div class="page" id="page-hr-report">
+  <button id="hrrep-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
+
+  <div style="margin-bottom:14px">
+    <div style="font-size:17px;font-weight:600">รายงานการลงเวลา</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px">ดูและดาวน์โหลดรายงานตามช่วงเวลาและสถานะ</div>
+  </div>
+
+  <!-- ช่วงวันที่ -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500">ช่วงวันที่</div>
+    <div style="display:flex;gap:8px">
+      <div class="field" style="flex:1;margin:0"><label>ตั้งแต่</label>
+        <input class="inp" id="hrrep-from" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+      <div class="field" style="flex:1;margin:0"><label>ถึง</label>
+        <input class="inp" id="hrrep-to" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+    </div>
+  </div>
+
+  <!-- กรองสถานะ -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500">สถานะ</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="hrrep-status-tabs">
+      <button class="rep-stat active" data-status="all">ทั้งหมด</button>
+      <button class="rep-stat" data-status="present">มาแล้ว</button>
+      <button class="rep-stat" data-status="late">มาสาย</button>
+      <button class="rep-stat" data-status="no_checkout">ยังไม่ออก</button>
+    </div>
+  </div>
+
+  <!-- เลือกพนักงาน -->
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--tx2);font-weight:500">เลือกพนักงาน</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn o sm" id="hrrep-all">เลือกทั้งหมด</button>
+        <button class="btn o sm" id="hrrep-none">ล้าง</button>
+      </div>
+    </div>
+    <input class="inp" id="hrrep-search" placeholder="ค้นหาชื่อ..." style="margin-bottom:8px;font-size:13px">
+    <div id="hrrep-emplist" style="max-height:200px;overflow-y:auto">
+      <div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">กำลังโหลด...</div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:8px" id="hrrep-count">เลือกแล้ว 0 คน</div>
+  </div>
+
+  <button class="btn p" id="hrrep-generate" style="margin-bottom:10px">สร้างรายงาน</button>
+
+  <!-- ผลลัพธ์ -->
+  <div id="hrrep-result" style="display:none">
+    <!-- สรุป -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="card" style="padding:12px;text-align:center;margin:0">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">วันทำงาน</div>
+        <div style="font-size:20px;font-weight:700;color:var(--ok)" id="hrrep-s-days">—</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center;margin:0">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">ชั่วโมงรวม</div>
+        <div style="font-size:20px;font-weight:700;color:var(--ac)" id="hrrep-s-hours">—</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center;margin:0">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">มาสาย</div>
+        <div style="font-size:20px;font-weight:700;color:var(--wn)" id="hrrep-s-late">—</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center;margin:0">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">ยังไม่ออก</div>
+        <div style="font-size:20px;font-weight:700;color:var(--er)" id="hrrep-s-noout">—</div>
+      </div>
+    </div>
+
+    <!-- ปุ่มดาวน์โหลด -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn o" id="hrrep-csv" style="flex:1">⤓ CSV</button>
+      <button class="btn o" id="hrrep-pdf" style="flex:1">⤓ PDF</button>
+    </div>
+
+    <!-- ตาราง -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="hrrep-table" style="overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="res-card">
     <div class="r-icon" id="ri">✅</div>
@@ -993,7 +1083,7 @@ function go(id) {
   target.classList.add('active');
 
   // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
-  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees','hr-export'];
+  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees','hr-export','hr-report'];
   const tabs = document.getElementById('nav-tabs');
   if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
@@ -1015,6 +1105,9 @@ function go(id) {
   }
   if (id === 'hr-export') {
     loadExportPage();
+  }
+  if (id === 'hr-report') {
+    loadReportPage();
   }
   if (id === 'hr-employees') {
     // เคลียร์ผลค้นหาเก่า
@@ -1294,6 +1387,182 @@ function hrExpDownload() {
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ========== HR — รายงาน ==========
+let hrRepEmployees = [];
+let hrRepSelected = {};
+let hrRepStatus = 'all';
+let hrRepData = null;   // ผลรายงานล่าสุด
+
+function loadReportPage() {
+  hrRepSelected = {};
+  hrRepStatus = 'all';
+  hrRepData = null;
+  document.getElementById('hrrep-result').style.display = 'none';
+  document.getElementById('hrrep-search').value = '';
+  // วันที่ default = เดือนปัจจุบัน
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('hrrep-from').value = fmtDateTH(first);
+  document.getElementById('hrrep-to').value   = fmtDateTH(now);
+  // reset status tabs
+  document.querySelectorAll('.rep-stat').forEach(b => b.classList.toggle('active', b.dataset.status === 'all'));
+
+  document.getElementById('hrrep-emplist').innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">กำลังโหลด...</div>';
+  gasRun('hrGetEmployeeList', { hrToken: S.hrToken })
+    .withSuccessHandler(r => {
+      if (!r || !r.success) { showToast((r && r.message) || 'โหลดรายชื่อไม่สำเร็จ'); if (r && r.authError) setTimeout(() => logout(), 1500); return; }
+      hrRepEmployees = r.employees || [];
+      renderRepList('');
+    })
+    .withFailureHandler(e => showToast(e.message));
+}
+
+function renderRepList(search) {
+  const list = document.getElementById('hrrep-emplist');
+  const q = (search || '').toLowerCase();
+  const filtered = hrRepEmployees.filter(e => !q || String(e.name).toLowerCase().includes(q) || String(e.empId).toLowerCase().includes(q));
+  if (filtered.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">ไม่พบพนักงาน</div>'; return; }
+  let html = '';
+  filtered.forEach(e => {
+    const sel = hrRepSelected[e.empId] ? 'sel' : '';
+    const check = hrRepSelected[e.empId] ? '✓' : '';
+    html += `<div class="exp-row ${sel}" data-id="${e.empId}">
+      <div class="exp-cb">${check}</div>
+      <div style="flex:1;min-width:0">
+        <div class="exp-nm">${e.name}</div>
+        <div class="exp-meta">${e.empId} · ${e.department} · กะ ${e.shift}</div>
+      </div></div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('.exp-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.id;
+      if (hrRepSelected[id]) delete hrRepSelected[id]; else hrRepSelected[id] = true;
+      renderRepList(document.getElementById('hrrep-search').value);
+      updateRepCount();
+    });
+  });
+}
+
+function updateRepCount() {
+  const n = Object.keys(hrRepSelected).length;
+  document.getElementById('hrrep-count').textContent = n === 0 ? `ยังไม่เลือก (ว่าง = ทุกคน)` : `เลือกแล้ว ${n} คน`;
+}
+
+function hrRepSelectAll() { hrRepEmployees.forEach(e => { hrRepSelected[e.empId] = true; }); renderRepList(document.getElementById('hrrep-search').value); updateRepCount(); }
+function hrRepClearAll() { hrRepSelected = {}; renderRepList(document.getElementById('hrrep-search').value); updateRepCount(); }
+
+function hrRepGenerate() {
+  const from = document.getElementById('hrrep-from').value.trim();
+  const to   = document.getElementById('hrrep-to').value.trim();
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(from) || !/^\d{2}\/\d{2}\/\d{4}$/.test(to)) { showToast('กรุณากรอกวันที่ให้ถูกต้อง'); return; }
+  const ids = Object.keys(hrRepSelected);
+  const btn = document.getElementById('hrrep-generate');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> กำลังสร้าง...';
+  gasRun('hrGetReport', { hrToken: S.hrToken, dateFrom: from, dateTo: to, employeeIds: ids, statusFilter: hrRepStatus })
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = 'สร้างรายงาน';
+      if (!r || !r.success) { showToast((r && r.message) || 'สร้างรายงานไม่สำเร็จ'); if (r && r.authError) setTimeout(() => logout(), 1500); return; }
+      hrRepData = r;
+      renderReport(r);
+    })
+    .withFailureHandler(e => { btn.disabled = false; btn.textContent = 'สร้างรายงาน'; showToast(e.message); });
+}
+
+function renderReport(r) {
+  const s = r.summary || {};
+  document.getElementById('hrrep-s-days').textContent  = s.totalDays || 0;
+  document.getElementById('hrrep-s-hours').textContent = s.totalHours || 0;
+  document.getElementById('hrrep-s-late').textContent  = s.late || 0;
+  document.getElementById('hrrep-s-noout').textContent = s.noCheckout || 0;
+
+  const rows = r.rows || [];
+  const badge = {
+    present:     '<span class="rep-bdg" style="background:rgba(16,185,129,.15);color:#34d399">ปกติ</span>',
+    late:        '<span class="rep-bdg" style="background:rgba(245,158,11,.15);color:#fbbf24">สาย</span>',
+    no_checkout: '<span class="rep-bdg" style="background:rgba(239,68,68,.12);color:#f87171">ไม่ออก</span>',
+    no_in:       '<span class="rep-bdg" style="background:rgba(120,120,130,.15);color:var(--tx2)">ไม่มี IN</span>',
+  };
+
+  let html = '<table class="rep-table"><thead><tr><th>ชื่อ</th><th>วันที่</th><th>เข้า</th><th>ออก</th><th>สถานะ</th><th>ชม.</th></tr></thead><tbody>';
+  if (rows.length === 0) {
+    html += '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--tx3)">ไม่มีข้อมูล</td></tr>';
+  } else {
+    rows.forEach(row => {
+      const [y,m,d] = row.date.split('-');
+      html += `<tr>
+        <td>${row.name}<div style="font-size:9px;color:var(--tx3)">${row.empId}</div></td>
+        <td>${d}/${m}/${(+y)+543}</td>
+        <td>${row.inTime || '—'}</td>
+        <td>${row.outTime || '—'}</td>
+        <td>${badge[row.status] || ''}</td>
+        <td>${row.workHours ? row.workHours.toFixed(1) : '—'}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table>';
+  document.getElementById('hrrep-table').innerHTML = html;
+  document.getElementById('hrrep-result').style.display = 'block';
+}
+
+function hrRepDownloadCSV() {
+  if (!hrRepData || !hrRepData.rows) { showToast('กรุณาสร้างรายงานก่อน'); return; }
+  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ยังไม่ออก', no_in: 'ไม่มีเข้า' };
+  let csv = '\uFEFF';  // BOM ให้ Excel อ่านภาษาไทยถูก
+  csv += 'รหัส,ชื่อ,แผนก,กะ,วันที่,เวลาเข้า,เวลาออก,สถานะ,ชั่วโมง\r\n';
+  hrRepData.rows.forEach(r => {
+    const [y,m,d] = r.date.split('-');
+    const thDate = `${d}/${m}/${y}`;
+    csv += `${r.empId},"${r.name}","${r.department}",${r.shift},${thDate},${r.inTime||''},${r.outTime||''},${statusTH[r.status]||''},${r.workHours||0}\r\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `report_${hrRepData.dateFrom}_${hrRepData.dateTo}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function hrRepDownloadPDF() {
+  if (!hrRepData || !hrRepData.rows) { showToast('กรุณาสร้างรายงานก่อน'); return; }
+  // สร้าง HTML แล้วเปิด print dialog (ผู้ใช้เลือก Save as PDF)
+  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ยังไม่ออก', no_in: 'ไม่มีเข้า' };
+  const s = hrRepData.summary || {};
+  const [fy,fm,fd] = hrRepData.dateFrom.split('-');
+  const [ty,tm,td] = hrRepData.dateTo.split('-');
+  let rowsHtml = '';
+  hrRepData.rows.forEach(r => {
+    const [y,m,d] = r.date.split('-');
+    rowsHtml += `<tr><td>${r.empId}</td><td>${r.name}</td><td>${r.department}</td><td>${d}/${m}/${(+y)+543}</td><td>${r.inTime||'—'}</td><td>${r.outTime||'—'}</td><td>${statusTH[r.status]||''}</td><td style="text-align:right">${r.workHours?r.workHours.toFixed(1):'—'}</td></tr>`;
+  });
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>รายงานการลงเวลา</title>
+    <style>
+      body{font-family:'Sarabun','Tahoma',sans-serif;padding:24px;color:#222}
+      h1{font-size:18px;margin:0 0 4px}
+      .sub{font-size:12px;color:#666;margin-bottom:16px}
+      .sum{display:flex;gap:16px;margin-bottom:16px;font-size:12px}
+      .sum div{background:#f3f4f6;padding:8px 14px;border-radius:6px}
+      table{width:100%;border-collapse:collapse;font-size:11px}
+      th{background:#f3f4f6;padding:6px;text-align:left;border:1px solid #ddd}
+      td{padding:5px 6px;border:1px solid #eee}
+      @media print{body{padding:0}}
+    </style></head><body>
+    <h1>รายงานการลงเวลา</h1>
+    <div class="sub">ช่วง ${fd}/${fm}/${(+fy)+543} – ${td}/${tm}/${(+ty)+543}</div>
+    <div class="sum">
+      <div>วันทำงาน <b>${s.totalDays||0}</b></div>
+      <div>ชั่วโมงรวม <b>${s.totalHours||0}</b></div>
+      <div>มาสาย <b>${s.late||0}</b></div>
+      <div>ยังไม่ออก <b>${s.noCheckout||0}</b></div>
+    </div>
+    <table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>วันที่</th><th>เข้า</th><th>ออก</th><th>สถานะ</th><th>ชม.</th></tr></thead>
+    <tbody>${rowsHtml}</tbody></table>
+    </body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
 }
 
 // ========== HR — จัดการพนักงาน ==========
@@ -2007,7 +2276,26 @@ setEB(1);
   // HR menu cards
   on('hr-menu-dashboard', 'click', function() { go('hr-dashboard'); });
   on('hr-menu-employees', 'click', function() { go('hr-employees'); });
-  on('hr-menu-report',    'click', function() { showToast('รายงานรายบุคคล — จะเพิ่มในขั้นถัดไป'); });
+  on('hr-menu-report',    'click', function() { go('hr-report'); });
+
+  // HR รายงาน
+  on('hrrep-back', 'click', function() { go('hr-dash'); });
+  on('hrrep-from', 'input', function() { maskDate(this); });
+  on('hrrep-from', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrrep-to', 'input', function() { maskDate(this); });
+  on('hrrep-to', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrrep-search', 'input', function() { renderRepList(this.value); });
+  on('hrrep-all', 'click', hrRepSelectAll);
+  on('hrrep-none', 'click', hrRepClearAll);
+  on('hrrep-generate', 'click', hrRepGenerate);
+  on('hrrep-csv', 'click', hrRepDownloadCSV);
+  on('hrrep-pdf', 'click', hrRepDownloadPDF);
+  document.querySelectorAll('.rep-stat').forEach(function(b) {
+    b.addEventListener('click', function() {
+      hrRepStatus = b.dataset.status;
+      document.querySelectorAll('.rep-stat').forEach(x => x.classList.toggle('active', x === b));
+    });
+  });
   on('hr-menu-export',    'click', function() { go('hr-export'); });
 
   // HR Export เงินเดือน
