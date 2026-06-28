@@ -2236,21 +2236,29 @@ function renderHistory(r) {
   let lastDate = '';
   rows.forEach(row => {
     if (!row || !row.date) return;
-    const isNewDay = row.date !== lastDate; lastDate = row.date;
-    const [yr, mo, dy] = (row.date || '--').split('-');
-    const thDate = dy && mo && yr ? `${dy}/${mo}/${yr}` : row.date;
+    // ใช้ displayDate จัดกลุ่ม (กะข้ามวัน: OUT จะอยู่ใต้วันของ IN)
+    const groupDate = row.displayDate || row.date;
+    const isNewDay = groupDate !== lastDate; lastDate = groupDate;
+    const [yr, mo, dy] = (groupDate || '--').split('-');
+    const thDate = dy && mo && yr ? `${dy}/${mo}/${yr}` : groupDate;
     const timeShort = row.time ? row.time.slice(0, 5) : '—';
+    // ถ้า OUT อยู่คนละวันกับกลุ่ม (ข้ามวัน) แสดงวันจริงเล็กๆ ต่อท้ายเวลา
+    let crossNote = '';
+    if (row.type === 'OUT' && row.displayDate && row.date !== row.displayDate) {
+      const [, om, od] = row.date.split('-');
+      crossNote = ` <span style="font-size:9px;color:var(--tx3)">(+${od}/${om})</span>`;
+    }
     let statusHtml = '';
     const st = row.status || 'OK';
     if (st === 'OK') statusHtml = '<span class="status-ok">✓ ปกติ</span>';
     else if (st.startsWith('LATE')) statusHtml = `<span class="status-late">⏰ ${st.replace('LATE ','สาย ')}</span>`;
     else if (st === 'OUT_NO_IN') statusHtml = '<span class="status-err">⚠ รอเช็คอิน (แจ้ง HR)</span>';
+    else if (st === 'MANUAL') statusHtml = '<span class="status-late">✎ คีย์โดย HR</span>';
     else statusHtml = `<span class="status-err">✗ ${st}</span>`;
     const typeHtml = row.type === 'IN' ? '<span class="type-in">เข้า</span>' : '<span class="type-out">ออก</span>';
     const durHtml = row.duration ? `<span style="font-size:11px;color:var(--ok)">${row.duration}</span>` : '—';
-    // record ไม่สมบูรณ์ (anomaly) → จางลงให้รู้ว่าไม่นับ
     const dim = row.complete === false ? 'opacity:.5' : '';
-    html += `<tr style="${isNewDay?'border-top:2px solid var(--bd2);':''}${dim}"><td><div class="hist-date">${thDate}</div><div style="font-family:var(--mo);font-size:13px;color:var(--tx)">${timeShort}</div></td><td>${typeHtml}</td><td>${statusHtml}</td><td>${durHtml}</td></tr>`;
+    html += `<tr style="${isNewDay?'border-top:2px solid var(--bd2);':''}${dim}"><td><div class="hist-date">${thDate}</div><div style="font-family:var(--mo);font-size:13px;color:var(--tx)">${timeShort}${crossNote}</div></td><td>${typeHtml}</td><td>${statusHtml}</td><td>${durHtml}</td></tr>`;
   });
   html += '</tbody></table>';
   body.innerHTML = html;
