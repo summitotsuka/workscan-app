@@ -549,6 +549,15 @@ select.inp option{background:var(--sf2)}
       </div>
       <div class="hr-menu-arrow">›</div>
     </div>
+
+    <div class="hr-menu-card" id="hr-menu-holiday">
+      <div class="hr-menu-icon" style="background:rgba(236,72,153,.15);color:#f472b6">◷</div>
+      <div style="flex:1">
+        <div class="hr-menu-title">จัดการวันหยุด</div>
+        <div class="hr-menu-desc">บันทึกวันหยุดนักขัตฤกษ์/วันหยุดพิเศษ</div>
+      </div>
+      <div class="hr-menu-arrow">›</div>
+    </div>
   </div>
 </div>
 
@@ -761,7 +770,9 @@ select.inp option{background:var(--sf2)}
       <button class="rep-stat active" data-status="all">ทั้งหมด</button>
       <button class="rep-stat" data-status="present">มาแล้ว</button>
       <button class="rep-stat" data-status="late">มาสาย</button>
-      <button class="rep-stat" data-status="no_checkout">ยังไม่ออก</button>
+      <button class="rep-stat" data-status="no_in">ไม่มีเข้า</button>
+      <button class="rep-stat" data-status="no_checkout">ไม่มีออก</button>
+      <button class="rep-stat" data-status="absent">ไม่มาทำงาน</button>
     </div>
   </div>
 
@@ -788,12 +799,12 @@ select.inp option{background:var(--sf2)}
     <!-- สรุป -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div class="card" style="padding:12px;text-align:center;margin:0">
-        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">วันทำงาน</div>
-        <div style="font-size:20px;font-weight:700;color:var(--ok)" id="hrrep-s-days">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">จำนวนรายการ</div>
+        <div style="font-size:20px;font-weight:700;color:var(--ac)" id="hrrep-s-days">—</div>
       </div>
       <div class="card" style="padding:12px;text-align:center;margin:0">
-        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">ชั่วโมงรวม</div>
-        <div style="font-size:20px;font-weight:700;color:var(--ac)" id="hrrep-s-hours">—</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">ไม่มีเข้า</div>
+        <div style="font-size:20px;font-weight:700;color:#fb923c" id="hrrep-s-noin">—</div>
       </div>
       <div class="card" style="padding:12px;text-align:center;margin:0">
         <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">มาสาย</div>
@@ -816,6 +827,31 @@ select.inp option{background:var(--sf2)}
       <div id="hrrep-table" style="overflow-x:auto"></div>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════ HR จัดการวันหยุด ═══════════════ -->
+<div class="page" id="page-hr-holiday">
+  <button id="hrhol-back" style="background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;padding:4px 0;margin-bottom:10px;font-family:var(--fn)">← กลับเมนู HR</button>
+
+  <div style="margin-bottom:14px">
+    <div style="font-size:17px;font-weight:600">จัดการวันหยุด</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px">วันหยุดนักขัตฤกษ์/พิเศษ (วันอาทิตย์ระบบตัดให้อัตโนมัติ)</div>
+  </div>
+
+  <!-- เพิ่มวันหยุด -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px;font-weight:500">เพิ่มวันหยุด</div>
+    <div class="field"><label>วันที่</label>
+      <input class="inp" id="hrhol-date" placeholder="วว/ดด/ปปปป" inputmode="numeric" maxlength="10"></div>
+    <div class="field"><label>ชื่อวันหยุด</label>
+      <input class="inp" id="hrhol-name" placeholder="เช่น วันสงกรานต์"></div>
+    <button class="btn p" id="hrhol-add" style="margin-top:6px">+ เพิ่มวันหยุด</button>
+  </div>
+
+  <!-- รายการวันหยุด -->
+  <div style="font-size:12px;color:var(--tx2);margin:14px 2px 8px;font-weight:500">รายการวันหยุด (<span id="hrhol-count">0</span> วัน)</div>
+  <div id="hrhol-loading" style="text-align:center;padding:20px;color:var(--tx3);font-size:13px">กำลังโหลด...</div>
+  <div id="hrhol-list"></div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -1083,7 +1119,7 @@ function go(id) {
   target.classList.add('active');
 
   // หน้าที่แสดง nav-tabs: เมนูพนักงาน + หน้า HR
-  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees','hr-export','hr-report'];
+  const navPages = ['checkin','checkout','history','hr-dash','hr-dashboard','hr-employees','hr-export','hr-report','hr-holiday'];
   const tabs = document.getElementById('nav-tabs');
   if (tabs) tabs.style.display = navPages.includes(id) ? 'flex' : 'none';
 
@@ -1108,6 +1144,9 @@ function go(id) {
   }
   if (id === 'hr-report') {
     loadReportPage();
+  }
+  if (id === 'hr-holiday') {
+    loadHolidayPage();
   }
   if (id === 'hr-employees') {
     // เคลียร์ผลค้นหาเก่า
@@ -1473,8 +1512,8 @@ function hrRepGenerate() {
 
 function renderReport(r) {
   const s = r.summary || {};
-  document.getElementById('hrrep-s-days').textContent  = s.totalDays || 0;
-  document.getElementById('hrrep-s-hours').textContent = s.totalHours || 0;
+  document.getElementById('hrrep-s-days').textContent  = s.totalRows || 0;
+  document.getElementById('hrrep-s-noin').textContent  = s.noIn || 0;
   document.getElementById('hrrep-s-late').textContent  = s.late || 0;
   document.getElementById('hrrep-s-noout').textContent = s.noCheckout || 0;
 
@@ -1482,8 +1521,9 @@ function renderReport(r) {
   const badge = {
     present:     '<span class="rep-bdg" style="background:rgba(16,185,129,.15);color:#34d399">ปกติ</span>',
     late:        '<span class="rep-bdg" style="background:rgba(245,158,11,.15);color:#fbbf24">สาย</span>',
-    no_checkout: '<span class="rep-bdg" style="background:rgba(239,68,68,.12);color:#f87171">ไม่ออก</span>',
-    no_in:       '<span class="rep-bdg" style="background:rgba(120,120,130,.15);color:var(--tx2)">ไม่มี IN</span>',
+    no_checkout: '<span class="rep-bdg" style="background:rgba(239,68,68,.12);color:#f87171">ไม่มีออก</span>',
+    no_in:       '<span class="rep-bdg" style="background:rgba(251,146,60,.15);color:#fb923c">ไม่มีเข้า</span>',
+    absent:      '<span class="rep-bdg" style="background:rgba(120,120,130,.15);color:var(--tx2)">ไม่มา</span>',
   };
 
   let html = '<table class="rep-table"><thead><tr><th>ชื่อ</th><th>วันที่</th><th>เข้า</th><th>ออก</th><th>สถานะ</th><th>ชม.</th></tr></thead><tbody>';
@@ -1492,9 +1532,10 @@ function renderReport(r) {
   } else {
     rows.forEach(row => {
       const [y,m,d] = row.date.split('-');
+      const dow = row.dow ? ` <span style="color:var(--tx3);font-size:9px">(${row.dow})</span>` : '';
       html += `<tr>
         <td>${row.name}<div style="font-size:9px;color:var(--tx3)">${row.empId}</div></td>
-        <td>${d}/${m}/${(+y)+543}</td>
+        <td>${d}/${m}/${(+y)+543}${dow}</td>
         <td>${row.inTime || '—'}</td>
         <td>${row.outTime || '—'}</td>
         <td>${badge[row.status] || ''}</td>
@@ -1509,13 +1550,13 @@ function renderReport(r) {
 
 function hrRepDownloadCSV() {
   if (!hrRepData || !hrRepData.rows) { showToast('กรุณาสร้างรายงานก่อน'); return; }
-  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ยังไม่ออก', no_in: 'ไม่มีเข้า' };
+  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ไม่มีออก', no_in: 'ไม่มีเข้า', absent: 'ไม่มาทำงาน' };
   let csv = '\uFEFF';  // BOM ให้ Excel อ่านภาษาไทยถูก
-  csv += 'รหัส,ชื่อ,แผนก,กะ,วันที่,เวลาเข้า,เวลาออก,สถานะ,ชั่วโมง\r\n';
+  csv += 'รหัส,ชื่อ,แผนก,กะ,วันที่,วัน,เวลาเข้า,เวลาออก,สถานะ,ชั่วโมง\r\n';
   hrRepData.rows.forEach(r => {
     const [y,m,d] = r.date.split('-');
     const thDate = `${d}/${m}/${y}`;
-    csv += `${r.empId},"${r.name}","${r.department}",${r.shift},${thDate},${r.inTime||''},${r.outTime||''},${statusTH[r.status]||''},${r.workHours||0}\r\n`;
+    csv += `${r.empId},"${r.name}","${r.department}",${r.shift},${thDate},${r.dow||''},${r.inTime||''},${r.outTime||''},${statusTH[r.status]||''},${r.workHours||0}\r\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -1527,15 +1568,15 @@ function hrRepDownloadCSV() {
 
 function hrRepDownloadPDF() {
   if (!hrRepData || !hrRepData.rows) { showToast('กรุณาสร้างรายงานก่อน'); return; }
-  // สร้าง HTML แล้วเปิด print dialog (ผู้ใช้เลือก Save as PDF)
-  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ยังไม่ออก', no_in: 'ไม่มีเข้า' };
+  const statusTH = { present: 'ปกติ', late: 'มาสาย', no_checkout: 'ไม่มีออก', no_in: 'ไม่มีเข้า', absent: 'ไม่มาทำงาน' };
   const s = hrRepData.summary || {};
   const [fy,fm,fd] = hrRepData.dateFrom.split('-');
   const [ty,tm,td] = hrRepData.dateTo.split('-');
   let rowsHtml = '';
   hrRepData.rows.forEach(r => {
     const [y,m,d] = r.date.split('-');
-    rowsHtml += `<tr><td>${r.empId}</td><td>${r.name}</td><td>${r.department}</td><td>${d}/${m}/${(+y)+543}</td><td>${r.inTime||'—'}</td><td>${r.outTime||'—'}</td><td>${statusTH[r.status]||''}</td><td style="text-align:right">${r.workHours?r.workHours.toFixed(1):'—'}</td></tr>`;
+    const dow = r.dow ? ` (${r.dow})` : '';
+    rowsHtml += `<tr><td>${r.empId}</td><td>${r.name}</td><td>${r.department}</td><td>${d}/${m}/${(+y)+543}${dow}</td><td>${r.inTime||'—'}</td><td>${r.outTime||'—'}</td><td>${statusTH[r.status]||''}</td><td style="text-align:right">${r.workHours?r.workHours.toFixed(1):'—'}</td></tr>`;
   });
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>รายงานการลงเวลา</title>
@@ -1543,7 +1584,7 @@ function hrRepDownloadPDF() {
       body{font-family:'Sarabun','Tahoma',sans-serif;padding:24px;color:#222}
       h1{font-size:18px;margin:0 0 4px}
       .sub{font-size:12px;color:#666;margin-bottom:16px}
-      .sum{display:flex;gap:16px;margin-bottom:16px;font-size:12px}
+      .sum{display:flex;gap:16px;margin-bottom:16px;font-size:12px;flex-wrap:wrap}
       .sum div{background:#f3f4f6;padding:8px 14px;border-radius:6px}
       table{width:100%;border-collapse:collapse;font-size:11px}
       th{background:#f3f4f6;padding:6px;text-align:left;border:1px solid #ddd}
@@ -1553,16 +1594,88 @@ function hrRepDownloadPDF() {
     <h1>รายงานการลงเวลา</h1>
     <div class="sub">ช่วง ${fd}/${fm}/${(+fy)+543} – ${td}/${tm}/${(+ty)+543}</div>
     <div class="sum">
-      <div>วันทำงาน <b>${s.totalDays||0}</b></div>
-      <div>ชั่วโมงรวม <b>${s.totalHours||0}</b></div>
+      <div>จำนวนรายการ <b>${s.totalRows||0}</b></div>
+      <div>ไม่มีเข้า <b>${s.noIn||0}</b></div>
       <div>มาสาย <b>${s.late||0}</b></div>
       <div>ยังไม่ออก <b>${s.noCheckout||0}</b></div>
+      <div>ไม่มาทำงาน <b>${s.absent||0}</b></div>
     </div>
     <table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>วันที่</th><th>เข้า</th><th>ออก</th><th>สถานะ</th><th>ชม.</th></tr></thead>
     <tbody>${rowsHtml}</tbody></table>
     </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 400);
+}
+
+// ========== HR — จัดการวันหยุด ==========
+function loadHolidayPage() {
+  document.getElementById('hrhol-date').value = '';
+  document.getElementById('hrhol-name').value = '';
+  document.getElementById('hrhol-loading').style.display = 'block';
+  document.getElementById('hrhol-list').innerHTML = '';
+  gasRun('hrGetHolidays', { hrToken: S.hrToken })
+    .withSuccessHandler(renderHolidays)
+    .withFailureHandler(e => { document.getElementById('hrhol-loading').style.display = 'none'; showToast(e.message); });
+}
+
+function renderHolidays(r) {
+  document.getElementById('hrhol-loading').style.display = 'none';
+  if (!r || !r.success) {
+    showToast((r && r.message) || 'โหลดวันหยุดไม่สำเร็จ');
+    if (r && r.authError) setTimeout(() => logout(), 1500);
+    return;
+  }
+  const holidays = r.holidays || [];
+  document.getElementById('hrhol-count').textContent = holidays.length;
+  const list = document.getElementById('hrhol-list');
+  if (holidays.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--tx3);font-size:13px">ยังไม่มีวันหยุด</div>';
+    return;
+  }
+  let html = '';
+  holidays.forEach(h => {
+    const [y, m, d] = h.date.split('-');
+    const thDate = `${d}/${m}/${(+y)+543}`;
+    html += `<div class="hd-row">
+      <div style="flex:1;min-width:0">
+        <div class="hd-name">${h.name}</div>
+        <div class="hd-meta">${thDate} (${h.dow})</div>
+      </div>
+      <button class="btn o sm hrhol-del" data-date="${h.date}" style="color:var(--er);border-color:var(--er)">ลบ</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('.hrhol-del').forEach(btn => {
+    btn.addEventListener('click', () => hrDeleteHoliday(btn.dataset.date));
+  });
+}
+
+function hrAddHoliday() {
+  const date = document.getElementById('hrhol-date').value.trim();
+  const name = document.getElementById('hrhol-name').value.trim();
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(date)) { showToast('วันที่ต้องเป็น วว/ดด/ปปปป'); return; }
+  if (!name) { showToast('กรุณากรอกชื่อวันหยุด'); return; }
+  const btn = document.getElementById('hrhol-add');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> บันทึก...';
+  gasRun('hrAddHoliday', { hrToken: S.hrToken, date: date, name: name })
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = '+ เพิ่มวันหยุด';
+      showToast(r.message, r.success);
+      if (r.success) loadHolidayPage();
+      else if (r.authError) setTimeout(() => logout(), 1500);
+    })
+    .withFailureHandler(e => { btn.disabled = false; btn.textContent = '+ เพิ่มวันหยุด'; showToast(e.message); });
+}
+
+function hrDeleteHoliday(date) {
+  if (!confirm('ลบวันหยุดนี้?')) return;
+  gasRun('hrDeleteHoliday', { hrToken: S.hrToken, date: date })
+    .withSuccessHandler(r => {
+      showToast(r.message, r.success);
+      if (r.success) loadHolidayPage();
+      else if (r.authError) setTimeout(() => logout(), 1500);
+    })
+    .withFailureHandler(e => showToast(e.message));
 }
 
 // ========== HR — จัดการพนักงาน ==========
@@ -2297,6 +2410,13 @@ setEB(1);
     });
   });
   on('hr-menu-export',    'click', function() { go('hr-export'); });
+  on('hr-menu-holiday',   'click', function() { go('hr-holiday'); });
+
+  // HR จัดการวันหยุด
+  on('hrhol-back', 'click', function() { go('hr-dash'); });
+  on('hrhol-date', 'input', function() { maskDate(this); });
+  on('hrhol-date', 'keydown', function(e) { allowDateKeys(e); });
+  on('hrhol-add', 'click', hrAddHoliday);
 
   // HR Export เงินเดือน
   on('hrexp-back', 'click', function() { go('hr-dash'); });
