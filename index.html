@@ -9,11 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0a0c10; --sf:#111318; --sf2:#181c24; --sf3:#1e2433;
-  --bd:#1e2433; --bd2:#2a3145;
-  --ac:#3b82f6; --ac2:#6366f1;
-  --ok:#10b981; --wn:#f59e0b; --er:#ef4444;
-  --tx:#e8eaf0; --tx2:#8892a4; --tx3:#4a5568;
+  /* ── ธีมสว่างนวล (Soft) — เทาอมฟ้า สบายตาในร่ม ── */
+  --bg:#eef1f6; --sf:#ffffff; --sf2:#f5f7fb; --sf3:#e8edf5;
+  --bd:#dde3ec; --bd2:#c4cdda;
+  --ac:#2563eb; --ac2:#4f46e5;
+  --ok:#059669; --wn:#d97706; --er:#dc2626;
+  --tx:#1e2733; --tx2:#5a6678; --tx3:#94a1b3;
   --fn:'IBM Plex Sans Thai',sans-serif; --mo:'IBM Plex Mono',monospace;
   --sab:env(safe-area-inset-bottom,0px);
 }
@@ -41,9 +42,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(
 .hd-row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px}
 .hd-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;flex-shrink:0}
 .hd-b-absent{background:rgba(120,120,130,.15);color:var(--tx2)}
-.hd-b-late{background:rgba(245,158,11,.15);color:#fbbf24}
-.hd-b-noout{background:rgba(239,68,68,.12);color:#f87171}
-.hd-b-present{background:rgba(16,185,129,.15);color:#34d399}
+.hd-b-late{background:rgba(217,119,6,.12);color:var(--wn)}
+.hd-b-noout{background:rgba(220,38,38,.1);color:var(--er)}
+.hd-b-present{background:rgba(5,150,105,.12);color:var(--ok)}
 .hd-name{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hd-meta{font-size:10px;color:var(--tx3);margin-top:1px}
 .hd-times{font-family:var(--mo);font-size:11px;color:var(--tx2);text-align:right;flex-shrink:0;line-height:1.5}
@@ -104,7 +105,7 @@ select.inp option{background:var(--sf2)}
 .oval.er{border-color:var(--er);animation:ov-er 2s ease-in-out infinite}
 @keyframes ov{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}50%{box-shadow:0 0 0 7px rgba(59,130,246,.1)}}
 @keyframes ov-er{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 0 7px rgba(239,68,68,.1)}}
-.fc{position:absolute;width:11px;height:11px;border-style:solid;border-color:#60a5fa}
+.fc{position:absolute;width:11px;height:11px;border-style:solid;border-color:var(--ac)}
 .fc.tl{top:-2px;left:-2px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
 .fc.tr{top:-2px;right:-2px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
 .fc.bl{bottom:-2px;left:-2px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
@@ -124,8 +125,8 @@ select.inp option{background:var(--sf2)}
 .hist-table td{padding:9px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
 .hist-table tr:last-child td{border-bottom:none}
 .hist-date{font-size:11px;color:var(--tx2);white-space:nowrap}
-.type-in{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(59,130,246,.15);color:#60a5fa}
-.type-out{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(239,68,68,.12);color:#f87171}
+.type-in{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(37,99,235,.12);color:var(--ac)}
+.type-out{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(220,38,38,.1);color:var(--er)}
 .status-ok{color:var(--ok);font-size:10px}
 .status-late{color:var(--wn);font-size:10px}
 .status-err{color:var(--er);font-size:10px}
@@ -149,13 +150,13 @@ select.inp option{background:var(--sf2)}
 .gps-row span:first-child{color:var(--tx2)}
 
 .badge{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
-.badge.ok{background:rgba(16,185,129,.15);color:#34d399}
-.badge.wn{background:rgba(245,158,11,.15);color:#fbbf24}
-.badge.er{background:rgba(239,68,68,.15);color:#f87171}
+.badge.ok{background:rgba(5,150,105,.12);color:var(--ok)}
+.badge.wn{background:rgba(217,119,6,.12);color:var(--wn)}
+.badge.er{background:rgba(220,38,38,.12);color:var(--er)}
 
 .stps{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
 .stp{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);background:var(--sf);border:1px solid var(--bd);padding:4px 9px;border-radius:7px;transition:all .3s}
-.stp.pass{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.06);color:#34d399}
+.stp.pass{border-color:rgba(5,150,105,.4);background:rgba(5,150,105,.08);color:var(--ok)}
 
 .timer-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
 .timer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(239,68,68,.5),transparent)}
@@ -166,10 +167,10 @@ select.inp option{background:var(--sf2)}
 .prog-f{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ac),#22d3ee);transition:width 1s linear}
 
 .banner{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:500}
-.banner.b{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);color:#60a5fa}
-.banner.r{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171}
-.banner.g{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:#34d399}
-.banner.w{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fbbf24}
+.banner.b{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--ac)}
+.banner.r{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:var(--er)}
+.banner.g{background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.25);color:var(--ok)}
+.banner.w{background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);color:var(--wn)}
 .bdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .bdot.b{background:var(--ac)}
 .bdot.r{background:var(--er);animation:bl 1.5s infinite}
@@ -200,9 +201,11 @@ select.inp option{background:var(--sf2)}
 .s-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
 .s-val{font-size:13px;font-weight:600;font-family:var(--mo)}
 
-.toast{position:fixed;bottom:calc(16px + var(--sab));left:16px;right:16px;background:#1a1a2e;border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:11px 14px;color:#f87171;font-size:13px;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px}
+.toast{position:fixed;bottom:calc(16px + var(--sab));left:16px;right:16px;background:var(--sf);border:1px solid var(--er);border-radius:10px;padding:11px 14px;color:var(--er);font-size:13px;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 .toast.show{transform:translateY(0);opacity:1}
-.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+.toast.ok{border-color:var(--ok);color:var(--ok)}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+.spin.dk{border-color:rgba(0,0,0,.12);border-top-color:var(--ac)}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -429,7 +432,7 @@ select.inp option{background:var(--sf2)}
   </div>
 
   <div class="card er">
-    <div class="sec" style="color:#f87171">GPS Location (ออกงาน)</div>
+    <div class="sec" style="color:var(--er)">GPS Location (ออกงาน)</div>
     <div class="gps-map"><div class="gps-grid"></div><div class="gps-zone"></div><div class="gps-bld"></div>
       <div class="gps-dot" id="gdot-out" style="top:47%;left:48%"><div class="gps-ring"></div></div>
     </div>
@@ -441,7 +444,7 @@ select.inp option{background:var(--sf2)}
   </div>
 
   <div class="card">
-    <div class="sec" style="color:#f87171">📸 Selfie ยืนยันตัวตน (ออกงาน)</div>
+    <div class="sec" style="color:var(--er)">📸 Selfie ยืนยันตัวตน (ออกงาน)</div>
     <div class="cam-wrap er" id="co-cam-wrap" style="display:none">
       <video id="v-out" autoplay muted playsinline></video>
     </div>
@@ -493,7 +496,7 @@ select.inp option{background:var(--sf2)}
   </div>
 
   <div id="hist-loading" style="text-align:center;padding:40px 0;color:var(--tx3)">
-    <div class="spin" style="margin:0 auto 12px;display:block;width:22px;height:22px;border-width:3px"></div>
+    <div class="spin dk" style="margin:0 auto 12px;display:block;width:22px;height:22px;border-width:3px"></div>
     <div style="font-size:13px">กำลังโหลด...</div>
   </div>
 
@@ -515,7 +518,7 @@ select.inp option{background:var(--sf2)}
   <!-- เมนู HR แบบการ์ด -->
   <div style="display:grid;gap:10px">
     <div class="hr-menu-card" id="hr-menu-dashboard">
-      <div class="hr-menu-icon" style="background:rgba(59,130,246,.15);color:#60a5fa">▦</div>
+      <div class="hr-menu-icon" style="background:rgba(59,130,246,.15);color:var(--ac)">▦</div>
       <div style="flex:1">
         <div class="hr-menu-title">ภาพรวมรายวัน</div>
         <div class="hr-menu-desc">ใครมาแล้ว ใครยังไม่มา ใครมาสาย</div>
@@ -524,7 +527,7 @@ select.inp option{background:var(--sf2)}
     </div>
 
     <div class="hr-menu-card" id="hr-menu-employees">
-      <div class="hr-menu-icon" style="background:rgba(16,185,129,.15);color:#34d399">☷</div>
+      <div class="hr-menu-icon" style="background:rgba(16,185,129,.15);color:var(--ok)">☷</div>
       <div style="flex:1">
         <div class="hr-menu-title">จัดการพนักงาน</div>
         <div class="hr-menu-desc">เพิ่ม/แก้ไข/เปลี่ยนกะ/คีย์เวลาย้อนหลัง</div>
@@ -533,7 +536,7 @@ select.inp option{background:var(--sf2)}
     </div>
 
     <div class="hr-menu-card" id="hr-menu-report">
-      <div class="hr-menu-icon" style="background:rgba(245,158,11,.15);color:#fbbf24">▤</div>
+      <div class="hr-menu-icon" style="background:rgba(245,158,11,.15);color:var(--wn)">▤</div>
       <div style="flex:1">
         <div class="hr-menu-title">รายงานรายบุคคล</div>
         <div class="hr-menu-desc">ดูประวัติการลงเวลาของพนักงานแต่ละคน</div>
@@ -542,7 +545,7 @@ select.inp option{background:var(--sf2)}
     </div>
 
     <div class="hr-menu-card" id="hr-menu-export">
-      <div class="hr-menu-icon" style="background:rgba(168,85,247,.15);color:#c084fc">⤓</div>
+      <div class="hr-menu-icon" style="background:rgba(168,85,247,.15);color:var(--ac2)">⤓</div>
       <div style="flex:1">
         <div class="hr-menu-title">Export เงินเดือน</div>
         <div class="hr-menu-desc">ดาวน์โหลดข้อมูลชั่วโมงทำงานตามช่วงเวลา</div>
@@ -551,7 +554,7 @@ select.inp option{background:var(--sf2)}
     </div>
 
     <div class="hr-menu-card" id="hr-menu-holiday">
-      <div class="hr-menu-icon" style="background:rgba(236,72,153,.15);color:#f472b6">◷</div>
+      <div class="hr-menu-icon" style="background:rgba(236,72,153,.15);color:var(--er)">◷</div>
       <div style="flex:1">
         <div class="hr-menu-title">จัดการวันหยุด</div>
         <div class="hr-menu-desc">บันทึกวันหยุดนักขัตฤกษ์/วันหยุดพิเศษ</div>
@@ -593,7 +596,7 @@ select.inp option{background:var(--sf2)}
   <div style="font-size:12px;color:var(--tx2);margin:16px 2px 8px;font-weight:500" id="hrdash-listlabel">รายชื่อ</div>
 
   <div id="hrdash-loading" style="text-align:center;padding:30px 0;color:var(--tx3)">
-    <div class="spin" style="margin:0 auto 10px;display:block;width:20px;height:20px;border-width:3px"></div>
+    <div class="spin dk" style="margin:0 auto 10px;display:block;width:20px;height:20px;border-width:3px"></div>
     <div style="font-size:13px">กำลังโหลด...</div>
   </div>
 
@@ -1519,9 +1522,9 @@ function renderReport(r) {
 
   const rows = r.rows || [];
   const badge = {
-    present:     '<span class="rep-bdg" style="background:rgba(16,185,129,.15);color:#34d399">ปกติ</span>',
-    late:        '<span class="rep-bdg" style="background:rgba(245,158,11,.15);color:#fbbf24">สาย</span>',
-    no_checkout: '<span class="rep-bdg" style="background:rgba(239,68,68,.12);color:#f87171">ไม่มีออก</span>',
+    present:     '<span class="rep-bdg" style="background:rgba(16,185,129,.15);color:var(--ok)">ปกติ</span>',
+    late:        '<span class="rep-bdg" style="background:rgba(245,158,11,.15);color:var(--wn)">สาย</span>',
+    no_checkout: '<span class="rep-bdg" style="background:rgba(239,68,68,.12);color:var(--er)">ไม่มีออก</span>',
     no_in:       '<span class="rep-bdg" style="background:rgba(251,146,60,.15);color:#fb923c">ไม่มีเข้า</span>',
     absent:      '<span class="rep-bdg" style="background:rgba(120,120,130,.15);color:var(--tx2)">ไม่มา</span>',
   };
@@ -1722,7 +1725,7 @@ function fillEmployeeForm(emp, mode) {
 
   if (mode === 'edit') {
     badge.textContent = 'แก้ไข';
-    badge.style.background = 'rgba(59,130,246,.15)'; badge.style.color = '#60a5fa';
+    badge.style.background = 'rgba(37,99,235,.12)'; badge.style.color = 'var(--ac)';
     actions.style.display = 'block';
     empidField.disabled = true; empidField.style.opacity = '.6';
     document.getElementById('hremp-title').textContent = emp.fullName || emp.employeeId;
@@ -1733,7 +1736,7 @@ function fillEmployeeForm(emp, mode) {
     sl.style.color = stCol;
   } else {
     badge.textContent = 'เพิ่มใหม่';
-    badge.style.background = 'rgba(16,185,129,.15)'; badge.style.color = '#34d399';
+    badge.style.background = 'rgba(5,150,105,.12)'; badge.style.color = 'var(--ok)';
     actions.style.display = 'none';
     empidField.disabled = false; empidField.style.opacity = '1';
     document.getElementById('hremp-title').textContent = 'พนักงานใหม่';
@@ -2370,8 +2373,8 @@ let _tt;
 function showToast(msg, ok) {
   const el = document.getElementById('toast');
   document.getElementById('tmsg').textContent = msg;
-  el.style.borderColor = ok ? 'rgba(16,185,129,.4)' : 'rgba(239,68,68,.4)';
-  el.style.color = ok ? '#34d399' : '#f87171';
+  el.style.borderColor = ok ? 'var(--ok)' : 'var(--er)';
+  el.style.color = ok ? 'var(--ok)' : 'var(--er)';
   el.classList.add('show'); clearTimeout(_tt);
   _tt = setTimeout(() => el.classList.remove('show'), 4000);
 }
